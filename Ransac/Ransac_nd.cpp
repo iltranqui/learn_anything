@@ -1,4 +1,4 @@
-//  RANSAC algorithm implemented in C++ with a main function and comments explaining each part of the code:
+// RANSAC algorithm implemented in C++ with a main function and comments explaining each part of the code:
 
 #include <algorithm>
 #include <cmath>
