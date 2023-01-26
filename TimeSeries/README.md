@@ -1,5 +1,8 @@
 ## 1st Attempt at TimeSeries
 
+### Defnition: 
+A time series is a collection of data points collected at regular intervals of time. It is a sequence of observations of a certain phenomenon over time. For example, stock prices, weather data, and population counts are all examples of time series data.
+
 TimeSeries are composed of 4 main components: 
 
 1. T - Trend   ( Time Variant )
