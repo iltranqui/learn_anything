@@ -30,9 +30,7 @@ poly3 = 10*[100 1];   % 10*(100s + 1)
 %poly2 = poly(poly2);
 %poly3 = poly(poly3);
 poly1=conv(poly1,poly1);
-poly2=conv(poly2,poly2);  % (0.1s + 1)^2 :
-% poly2=conv(poly2,poly2);  % (0.1s + 1)^3 for higher sqaures just repear
-% the function
+poly2=conv(poly2,poly2);  % (0.1s + 1)^2 : Note, if yo
 poly_den=conv(poly1,poly2)
 
 poly_num = poly3

@@ -1,6 +1,6 @@
 function popov(sys,k,q)
 
-%  pop with proportional gain k and popov slope q.
+% pop with proportional gain k and popov slope q.
 % notice that it is better to check the K max of the linear system by tools like rlocus, and then choose the k wisely.
 
 % iftah naftaly (2023). pop (https://www.mathworks.com/matlabcentral/fileexchange/69734-pop), 
