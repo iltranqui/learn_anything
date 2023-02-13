@@ -16,3 +16,13 @@ int main() {
     return 0;
 }
 
+// write a function which has inpuit receives a string and returns the number of words in the string
+// for example, if the input is "Hello World", the output should be 2
+
+
+
+// wtite a function which allocates memory for a 3D array of integers, prints it and then frees the memory
+void    
+
+// write a function which prints the table of a sudoku game
+void printSudocku() 

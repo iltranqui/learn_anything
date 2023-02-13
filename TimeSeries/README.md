@@ -23,13 +23,6 @@ TimeSeries are composed of 4 main components:
 
 Time Series are composed by Filling Missing Data
 
-Trend | Jump  | Period | Stocastic | Stationarity
---- | --- | --- | --- | AugmentedDickey-FullerTest
-Seconds | 301 | 283 | --- | ---
---- | --- | --- | --- | ---
-
-Table is a WRong appraoch, make a list of all possible Tests. 
-
 
 | Trend         | Jump     | Stationarity | Period |
 |--------------|-----------|------------|----------|
@@ -113,15 +106,3 @@ Dixon's test: This test involves dividing the range of the time series into quar
 Box plot: A box plot displays the minimum, first quartile, median, third quartile, and maximum of a time series. Observations that fall outside the range of the minimum or maximum are considered outliers.
 
 Tukey's method: This method involves calculating the interquartile range (IQR) and considering any observations that fall outside the range of 1.5 times the IQR as outliers.
-
-
-## Core Skills
-
-<details>
-<summary>Business Understanding</summary>
-
-|Concept|Resource|Done|
-|---|---|---|
-||[Book: Delivering Happiness](https://www.amazon.com/Delivering-Happiness-Profits-Passion-Purpose/dp/0446576220)|✓|
-
-</details>
