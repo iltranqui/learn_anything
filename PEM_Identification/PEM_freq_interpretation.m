@@ -4,10 +4,14 @@ clear all
 %% defining the system example
 sysv = tf(1e-3*[0 1 0.43 0.056 0.0023],[1 -3.1 3.5801 -1.8248 0.3462],1)
 
-% the dataset of random variables
-u = randn(5000,1);
-y = lsim(sysv,u);
+% the dataset of random variables or import your datasets
+u = randn(5000,1);    % input
+y = lsim(sysv,u);     % outputs
 
+figure;
+plot(y,'b')
+hold on; 
+%plot(u);
 %% Output Error and ARX model
 th_oe = oe(iddata(y,u),[2 2 1])
 %nb — (Order of Numerator ) Order of the B(q) polynomial + 1, which is equivalent to the length of the B(q) polynomial. nb is an Ny-by-Nu matrix. Ny is the number of outputs and Nu is the number of inputs.
@@ -86,3 +90,58 @@ bode(tf(th_arxL.b,th_arxL.a,1))
 bode(sysv)
 
 close all
+
+%% Iteration OE
+Ts = 1; 
+
+Fit_Best = 0;
+MSE_Best = 0;
+
+n_den = 15;
+n_num = 15;
+delay_max = 20;
+
+for num=1:n_den
+    for den=1:n_den
+        for dist=1:delay_max
+            th_oe = oe(iddata(y,u),[num,den,dist]);
+            Fit = th_oe.Report.Fit.FPE;
+            MSE = th_oe.Report.Fit.AIC;
+            if ( Fit > Fit_Best )
+                Fit_Best = Fit;
+                MSE_Best = MSE;
+                th_oe_best = th_oe;
+            end
+        end    
+    end
+end
+
+th_oe_best
+
+%% iteration ARX 
+
+Ts = 1; 
+
+Fit_Best = 0;
+MSE_Best = 0;
+
+n_den =25;
+n_num = 25;
+delay_max = 40;
+
+for num=1:n_num
+    for den=1:n_den
+        for dist=0:delay_max
+            th_arx = arx(iddata(y,u),[num,den,dist]);
+            Fit = th_arx.Report.Fit.FPE;
+            MSE = th_arx.Report.Fit.AIC;
+            if ( Fit > Fit_Best )
+                Fit_Best = Fit;
+                MSE_Best = MSE;
+                th_arx_best = th_arx;
+            end
+        end    
+    end
+end
+
+th_arx_best
