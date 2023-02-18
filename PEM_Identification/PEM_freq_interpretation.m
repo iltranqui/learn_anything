@@ -145,3 +145,118 @@ for num=1:n_num
 end
 
 th_arx_best
+th_arx_best
+
+%% iteration ARMAX 
+opt = armaxOptions('Focus','prediction','Display','on','EnforceStability',false,SearchMethod,'auto');
+% https://de.mathworks.com/help/ident/ref/armaxoptions.html
+
+Fit_Best = 0;
+MSE_Best = 0;
+
+n_den = 5;  % order of A polynomial ( Associated with the Output ) 
+n_num = 5;  % order of B polynomial ( associated with the Input ) 
+n_error = 5; %  order of C polynomial ( associated with Error ) 
+delay_max = 30;
+
+for num=1:n_num
+    for den=1:n_den
+        for error=1:n_error
+            for dist=1:delay_max
+                th_armax = armax(iddata(y,u,Ts),[num,den,error,dist],opt);
+                Fit = th_armax.Report.Fit.FPE;
+                MSE = th_armax.Report.Fit.MSE;
+                if ( Fit > Fit_Best )
+                    Fit_Best = Fit;
+                    MSE_Best = MSE;
+                    th_armax_best = th_armax;
+                end
+            end
+        end    
+    end
+end
+
+th_armax_best
+
+%% iteration ARIMAX  
+% ARMAX with intergration of noise 
+opt = armaxOptions('Focus','prediction','Display','on','EnforceStability',false,SearchMethod,'auto');
+% https://de.mathworks.com/help/ident/ref/armaxoptions.html
+
+Fit_Best = 0;
+MSE_Best = 0;
+
+n_den = 5;  % order of A polynomial ( Associated with the Output ) 
+n_num = 5;  % order of B polynomial ( associated with the Input ) 
+n_error = 5; %  order of C polynomial ( associated with Error ) 
+delay_max = 30;
+
+for num=1:n_num
+    for den=1:n_den
+        for error=1:n_error
+            for dist=1:delay_max
+                th_arimax = armax(iddata(y,u,Ts),[num,den,error,dist],'IntegrateNoise',true,opt);
+                Fit = th_arimax.Report.Fit.FPE;
+                MSE = th_arimax.Report.Fit.MSE;
+                if ( Fit > Fit_Best )
+                    Fit_Best = Fit;
+                    MSE_Best = MSE;
+                    th_arimax_best = th_arimax;
+                end
+            end
+        end    
+    end
+end
+
+th_arimax_best
+%% Final Report
+report_oe = th_oe_best.Report.Fit;
+report_arx = th_arx_best.Report.Fit;
+report_armax = th_armax_best.Report.Fit;
+report_arimax = th_arimax_best.Report.Fit;
+
+% Print all the properties of the report
+fprintf("OE best model report")
+names = fieldnames(report_oe);
+for i = 1:numel(names)
+    fprintf('%s: %s\n', names{i}, report.(names{i}));
+end
+fprintf("ARX best model report")
+names = fieldnames(report_arx);
+for i = 1:numel(names)
+    fprintf('%s: %s\n', names{i}, report.(names{i}));
+end
+fprintf("ARMAX best model report")
+names = fieldnames(report_armax);
+for i = 1:numel(names)
+    fprintf('%s: %s\n', names{i}, report.(names{i}));
+end
+fprintf("ARIMAX best model report")
+names = fieldnames(report_arimax);
+for i = 1:numel(names)
+    fprintf('%s: %s\n', names{i}, report.(names{i}));
+end
+
+%% Example of Displaying the best model
+load dryer2;
+z = iddata(y2,u2,0.08,'Tstart',0);
+na = 2:4;
+nc = 1:2;
+nk = 0:2;
+models = cell(1,18);
+ct = 1;
+for i = 1:3
+    na_ = na(i);
+    nb_ = na_;
+    for j = 1:2
+        nc_ = nc(j);
+        for k = 1:3
+            nk_ = nk(k); 
+            models{ct} = armax(z,[na_ nb_ nc_ nk_]);
+            ct = ct+1;
+        end
+    end
+end
+
+models = stack(1,models{:});
+compare(z,models)
