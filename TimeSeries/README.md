@@ -1,5 +1,16 @@
 # Time Series
 
+Noted based on STOCHASTIC MODELINGA Thorough Guide to Evaluate, Pre-Process, Model and Compare Time Series with MATLAB Software Hossein Bonakdari
+Mohammad Zeynoddin
+
+The book is divided into: 
+
+1. Preparation and stationarizing
+2. Distribution evaluation and normalizing
+3. Stochastic modeling
+4.  Goodness-of-fit and precision criteria
+5. Forecasting time series by deep learning and hybrid methods
+
 ### Definition: 
 A time series is a collection of data points collected at regular intervals of time. It is a sequence of observations of a certain phenomenon over time. For example, stock prices, weather data, and population counts are all examples of time series data.
 
