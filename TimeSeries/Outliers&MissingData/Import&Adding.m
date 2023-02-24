@@ -4,7 +4,7 @@ clear all,
 close all,
 format long
 %Read data from source (Excel file with *.xlsx format)
-input = readtable('EXAMPLE 1.xlsx', 'Sheet', "Sheet1", 'Range', 
+input = readtable('AirQualityUCI.xlsx', 'Sheet', "Sheet1", 'Range', 
 "A:C",'TreatAsEmpty',{'.','NA'});
 %Summarize the input
  summary(input)
@@ -24,14 +24,13 @@ input = readtable('EXAMPLE 1.xlsx', 'Sheet', "Sheet1", 'Range',
 %% Second option of treating missing data
 %Interpolating missing data with linear method
  [output2,output2F] = fillmissing(input,'linear'); % or spline or pchip nearest
- % can used other methods like pchip,spline, makia and other methofs to fill in the data. 
+ % can used other methods like pchip,spline, makia and other methofs to fill in the data
 [output2,output2F] = fillmissing(input,'linear'); % or spline or pchip nearest
  rowsInrerpolated = output2(any(output2F,2),:);
  disp(rowsInrerpolated)
  %Plot interpolated data
  output2FF = output2F(:,3);
- plot(input.t, input.DATA,'d',… 
- input.t(output2FF),output2.DATA(output2FF),'o')
+ plot(input.t, input.DATA,'d', input.t(output2FF),output2.DATA(output2FF),'o')
  xlabel('Time (any time interval)', 'fontsize',12)
  ylabel('Collected data', 'fontsize',12)
  legend('Observed','Interpolated','Location','southeast')
