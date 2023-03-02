@@ -112,6 +112,8 @@ crit: critical values of the test,
 * H = 1 -> the series is stationary
 * H = 0 indicates rejection of the unit-root null or there is a unit root for the series  -> The series is nonstationary.
 
+In summary, the KPSS test is used to test for stationarity with a trend, the ADF test is used to test for stationarity with a stochastic trend or unit root, and the PP test is used to test for stationarity with a stochastic trend or unit root, but is less sensitive to the choice of lag length. The choice of which test to use depends on the suspected nature of the time series and the specific hypothesis being tested.
+
 # Stationarizing methods
 
 After testing time series for deterministic terms and detecting nonstationary factors,they should be stationarized using appropriate methods. 
