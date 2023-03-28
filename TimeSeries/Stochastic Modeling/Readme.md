@@ -41,4 +41,19 @@ The conventional stochastic statistical models are:
 * auto-regressive integrated moving average (ARIMA), 
 * seasonal autoregressive integrated moving average (SARIMA),
 
->  The primary assumption in the development of stochastic models is the stationarity of the time series.
+>  The primary assumption in the development of stochastic models is the stationarity of the time series. However, the majority of time series that we collect from real-life
+application do not follow this assumption
+
+For this reason, we define a differencing operator to stationarize time series with deterministic terms. 
+$ \begin{gathered}\nablax_t=x_t=x_t-x_{t-1}\end{gathered} $ sometimes with a delay time operator $ \begin{gathered}\nabla^1 x_t=(1-B) x_t \\=x_t-x_{t-1}\end{gathered} $ this is the *NonSeasonal Differencing* 
+The *Seasonal Differencing* is.. 
+
+### ARMA MOdels
+
+The ARMA model is suitable for modeling nonseasonal time series with no differencing due to the use of nonseasonal parameters. The series should be stationarized with
+a suitable preprocessing method. The differencing operator in ARIMA model has already been made suitable for application with nonstationary series. If seasonal differencing is applied instead, the ARIMA is also suitable to be used for seasonal time series. When the ARIMA model is modified to consider seasonal differencing it is known as the SARIMA model, which includes both seasonal and nonseasonal parameters and differencing operators
+
+# Identify appropriate models and parameters’ orders
+
+Use s ACF and PACF plots to dtermine if a univaraite time series is stationary. If not, preprocessing is necessary. Example: The YJ transform made the distribution of the time series more similar to normal distribution, which covers the condition of having normality of the data for stochastic modeling.
+
