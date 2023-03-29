@@ -22,32 +22,33 @@ Gaussian Standardization Technique:
 Uniform standardization transforms data so that it falls within a specified range. This technique is useful when the data has a wide range of values and needs to be scaled down to a more manageable range. Uniform standardization is calculated by subtracting the minimum value from each data point and then dividing by the range (i.e., the difference between the maximum and minimum values).
 
 Uniform Standardization Technique:
-Pros:
+### Pros:
 
-Rescales the data to a standard range, which can help with interpretation.
-Can handle outliers in the data.
-Cons:
+* Rescales the data to a standard range, which can help with interpretation.
+* Can handle outliers in the data.
+### Cons:
 
-Does not produce data with a mean of zero or a standard deviation of one, which can be a disadvantage in some contexts.
-Can be sensitive to outliers if the sample size is small.
-When to use:
+* Does not produce data with a mean of zero or a standard deviation of one, which can be a disadvantage in some contexts.
+* Can be sensitive to outliers if the sample size is small.
+### When to use:
 
-When the goal is to rescale the data to a standard range.
-When working with data that is not normally distributed.
+* When the goal is to rescale the data to a standard range.
+* When working with data that is not normally distributed.
 
-* Linear [0,1] Standardization:
+### Linear [0,1] Standardization:
 Linear [0,1] standardization scales the data to fall within a range of 0 to 1. This technique is useful when the data needs to be transformed to a probability distribution, where all values lie between 0 and 1. Linear [0,1] standardization is calculated by subtracting the minimum value from each data point, dividing by the range, and then multiplying by 1.
 
 Linear [0,1] Standardization Technique:
-Pros:
+### Pros:
 
-Rescales the data to a standard range (between 0 and 1), which can help with interpretation.
-Does not require the data to be normally distributed.
-Cons:
+* Rescales the data to a standard range (between 0 and 1), which can help with interpretation.
+* Does not require the data to be normally distributed.
+### Cons:
 
-Does not produce data with a mean of zero or a standard deviation of one, which can be a disadvantage in some contexts.
-Can be sensitive to outliers if the sample size is small.
-When to use:
+* Does not produce data with a mean of zero or a standard deviation of one, which can be a disadvantage in some contexts.
+* Can be sensitive to outliers if the sample size is small.
+
+### When to use:
 
 When the goal is to rescale the data to a standard range (between 0 and 1).
 When working with data that is not normally distributed.
@@ -56,11 +57,11 @@ When working with data that is not normally distributed.
 Normalized standardization scales the data to have a norm (i.e., a magnitude) of 1. This technique is useful when the magnitude of the data is important but the scale is not. Normalized standardization is calculated by dividing each data point by the norm of the data set (i.e., the square root of the sum of the squares of each data point).
 
 Normalized Standardization Technique:
-Pros:
+### Pros:
 
-Scales the data to a standard range (-1 to 1), which can help with interpretation.
-Respects the original shape and distribution of the data.
-Cons:
+* Scales the data to a standard range (-1 to 1), which can help with interpretation.
+* Respects the original shape and distribution of the data.
+### Cons:
 
 Can be sensitive to outliers if the sample size is small.
 Requires knowing the minimum and maximum values of the data, which may not always be available.
