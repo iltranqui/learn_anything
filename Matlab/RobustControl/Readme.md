@@ -1,3 +1,5 @@
+# Robust Control Example
+
 Petko Petkov (2023). Robust control design of the Mass/Damper/Spring system (https://www.mathworks.com/matlabcentral/fileexchange/10353-robust-control-design-of-the-mass-damper-spring-system), MATLAB Central File Exchange. Retrieved April 17, 2023.
 
 This collection contains M-files intended for design of the Mass/Damper/Spring control system using the newly available functions from Robust Control Toolbox,version 3. Description of the system and version of the files using functions from mu-toolbox can be found in the book ?Robust Control Design with MATLAB? by Da-Wei Gu, Petko H. Petkov and Mihail M. Konstantinov, Springer-Verlag, London, 2005(http://www.springer.com/sgw/cda/frontpage/0,11855,4-192-22-46383093-0,00.html?changeHeader=true)
@@ -6,9 +8,43 @@ The book also presents other 5 case studies including robust control systems des
 
 These M-files should be used in the environment of MATLAB, version 7.1, Service Pack 3, together with the Robust Control Toolbox, version 3.0 and Control System Toolbox, version 6.2.
 
-List of the files:
+## Main Goal: 
+Achieve the performance objectives with some uncertainty in the systems, by considering the 3 Sensitivity functions.
 
-olp_mds.m Creates model of the uncertain open loop system
+* Sensitivity $S(s)=\frac{1}{1+R(s)G(s)}$  $\begin{aligned} & \text { how theacts to process variable } \\ & \text { risturbances }\end{aligned}$ how the process variable
+reacts to load disturbances
+* Complementary sensitivity $T(s)=\frac{R(s) G(s)}{1+R(s) G(s)}$ the response of process variable and control signal to the set point.
+* Control sensitivitity $K(s)=\frac{R(s)}{1+R(s) G(s)}=S(s) R(s)$ response of the control signal to measurement noise
+
+To achieve good performance, the following goals should be achieved:
+
+- for good tracking, 
+$
+\left\|(I+G K)^{-1}\right\|_{\infty}
+$
+- for good disturbance attenuation, 
+$
+\left\|(I+G K)^{-1}\right\|_{\infty}
+$
+- for good noise rejection, 
+$
+\left\|-(I+G K)^{-1} G K\right\|_{\infty}
+$
+- for less control energy, 
+$
+\left\|K(I+G K)^{-1}\right\|_{\infty}
+$
+
+### List of the files:
+
+1. mod_mds.m Creates the uncertainty system model
+
+2. olp_mds.m Creates model of the uncertain open loop system
+
+3. pfr_mds.m Frequency responses of the uncertain plant models
+
+4. wts_mds.m Sets the performance weighting functions
+
 hin_mds.m Design of Hinf controller
 lsh_mds.m Design of Hinf loop shaping controller
 ms_mds.m Design of mu-controller
