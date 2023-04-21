@@ -1,7 +1,9 @@
 % Generate the open-loop connection for the
 % mass/damper/spring system
 %
+
 mod_mds
+
 %
 % nominal frequency response of G
 figure(1)
@@ -18,11 +20,12 @@ bodemag(1/Wp,'r-',omega), grid
 title('Inverse of performance weighting function')
 %
 % open-loop connection with the weighting function
-systemnames = ' G Wp Wu ';
-inputvar = '[ dist; control ]';
-outputvar = '[ Wp; -Wu; -G-dist ]';
-input_to_G = '[ control ]';
-input_to_Wp = '[ G+dist ]';
-input_to_Wu = '[ control ]';
+% How to erite an uncertain system
+systemnames = ' G M Wp Wu ';              % the names of the TF to insert
+inputvar = '[ dist; control ]';         % the names of the input TFs
+outputvar = '[ Wp; -Wu; -G-dist ]';     % the names of the output TFs
+input_to_G = '[ control ]';             % Since G has only 1 input 
+input_to_Wp = '[ G+dist ]';             % only 1 input
+input_to_Wu = '[ control ]';            % only 1 input
 sys_ic = sysic;
 
