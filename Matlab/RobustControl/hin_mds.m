@@ -5,7 +5,8 @@ ncon = 1;
 gmin = 0.1;
 gmax = 10;
 tol = 0.001;
-hin_ic = sys_ic.Nominal;
+%hin_ic = sys_ic.Nominal;
+hin_ic=sel(sys_ic,[4:6],[4:5])
 [K_hin,clp] = hinfsyn(hin_ic,nmeas,ncon,gmin,gmax,tol);
 disp(' ')
 get(K_hin)
