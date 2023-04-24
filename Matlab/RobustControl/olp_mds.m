@@ -21,7 +21,7 @@ title('Inverse of performance weighting function')
 %
 % open-loop connection with the weighting function
 % How to erite an uncertain system
-systemnames = ' G M Wp Wu ';              % the names of the TF to insert
+systemnames = ' G Wp Wu ';              % the names of the TF to insert
 inputvar = '[ dist; control ]';         % the names of the input TFs
 outputvar = '[ Wp; -Wu; -G-dist ]';     % the names of the output TFs
 input_to_G = '[ control ]';             % Since G has only 1 input 

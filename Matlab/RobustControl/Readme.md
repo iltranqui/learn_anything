@@ -35,6 +35,29 @@ $
 \left\|K(I+G K)^{-1}\right\|_{\infty}
 $
 
+For disturbance attenuation σ(S(jω)) ¯ should be made small.
+2. For noise suppression σ(T (jω)) ¯ should be made small.
+3. For good reference tracking we should have σ(T (jω)) ¯ ≈ σ(T (jω)) ≈ 1.
+4. For control energy saving σ(R(jω)) ¯ , where R(s) = K(s)S(s), should be made
+small.
+
+Setting of desired attenuation in the requirement 1 above, for example, may be specified as
+$$
+\bar{\sigma}(S(j \omega)) \leq\left|W_1^{-1}(j \omega)\right|
+$$
+$$
+|W_1^{1}(j \omega)\right| \leq\left \frac{1}{\bar{\sigma}(S(j \omega))}
+$$
+where $\left|W_1^{-1}(j \omega)\right|$ is the desired factor of disturbance attenuation. Making $W_1(j \omega)$ dependent on the frequency $\omega$ allows to set different attenuation for different frequency ranges.
+
+The stability margins of the closed-loop system are set by singular values inequalities as
+$$
+\bar{\sigma}(R(j \omega)) \leq\left|W_2^{-1}(j \omega)\right|
+$$
+or
+$$
+\bar{\sigma}(T(j \omega)) \leq\left|W_3^{-1}(j \omega)\right|
+$$
 ### List of the files:
 
 1. mod_mds.m Creates the uncertainty system model

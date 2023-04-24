@@ -1,6 +1,7 @@
 % Nominal performance for three controllers of the mass/damper/spring
 % system
-% 
+%
+%  
 clear all;
 olp_mds;
 

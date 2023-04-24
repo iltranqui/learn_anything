@@ -14,23 +14,29 @@ pk = 0.3;
 %
 A=[ 0 1
 -k/m -c/m];
-B1 = [ 0 0 0
--pm -pc/m -pk/m];
-B2 = [ 0
-1/m];
-C1 = [-k/m -c/m
-0 c
-k 0 ];
-C2 = [ 1 0 ];
+
+B1 = [  0      0    0
+        -pm -pc/m -pk/m];
+
+B2 = [ 0  1/m];
+
+C1 = [ -k/m -c/m
+        0    c
+        k    0 ];
+
+C2 =  [ 1    0 ];
+
 D11 = [-pm -pc/m -pk/m
-0 0 0
-0 0 0 ];
-D12 = [1/m
-0
-0 ];
+        0    0    0   
+        0    0    0 ];
+
+D12 = [1/m  0   0];
+
 D21 = [0 0 0];
+
 D22 = 0;
-G = pck(A,[B1,B2],[C1;C2],[D11 D12;D21 D22])
+
+% G = pck(A,[B1,B2],[C1;C2],[D11 D12;D21 D22])
 
 % Building the uncertain model
 % LFT representation of the mass-damper-spring system with uncertainties
@@ -54,7 +60,7 @@ input_to_int2 = '[int1]';
 outputvar = '[mat_mi(1);mat_c(1);mat_k(1);int2]';
 sysic;
 
-% From mod_mds .> somwhow
+% From mod_mds .> somehow
 % Uncertain model of the Mass/Damper/Spring system
 %
 m = ureal('m',3,'Percentage',40);
@@ -71,22 +77,26 @@ M.Equation{1} = equate(x,tf(1,[1,0])*xdot);
 M.Equation{2} = equate(xdot,tf(1/m,[1,0])*(u-k*x-c*xdot));
 G = M.System;
 
+% G is the system in 1dof
+
 % pfr_mds
-% 
 % Frequency responses of the perturbed plants
-%
 
 omega = logspace(-1,1,100);
 G64 = gridureal(G,'c',4,'k',4,'m',4);
-%
+
+% Bode plot of the Open Loop unedited Function
 figure(1)
 bode(G.Nominal,'r-',G64,'b--',omega), grid
 title('Bode plots of uncertain plant')
 legend('Nominal plant','Uncertain plant')
 
 % wts mds.m updated alos with v2013
+% the desired behaviour of the function
+Time = 1; % sec
+smorz = 0.7; % smorzamento
 nuM = 1;
-dnM = [1.0^2 2*0.7*1.0 1];
+dnM = [Time^2 Time*smorz*1.0 1];
 gainM = 1;
 M = gainM*tf(nuM,dnM)
 tol = 1e-6;
@@ -95,11 +105,16 @@ nuWp = [2 1];
 dnWp = [2 tol];
 gainWp = 5e-1;
 Wp = gainWp*tf(nuWp,dnWp)
+% This weighting function has the purpose to ensure the gain of
+%the loop from r and d to the error y − yM to be of order tol in the low frequency
+%range which will ensure closeness between the system and model and sufficient
+%disturbance attenuation at the system output. 
 
 nuWu = [0.05 1];
 dnWu = [0.0001 1];
 gainWu = 5e-2;
 Wu = gainWu*tf(nuWu,dnWu)
+% This weighting function ensures attenuation of componetns with frequency over 10rad/s
 
 % Plot the weighting functions
 figure
@@ -142,7 +157,6 @@ input_to_Wu = '[ control ]';            % only 1 input
 sys_ic = sysic;
 
 
-
 % hin_mds
 nmeas = 1;
 ncon = 1;
@@ -156,9 +170,6 @@ figure
 bode(K_hin,'b--'), grid on;
 title('Bode plots of controller')
 legend('K_hin')
-
-
-
 
 disp(' ')
 get(K_hin)
