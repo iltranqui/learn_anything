@@ -63,9 +63,9 @@ sysic;
 % From mod_mds .> somehow
 % Uncertain model of the Mass/Damper/Spring system
 %
-m = ureal('m',3,'Percentage',40);
-c = ureal('c',1,'Percentage',20);
-k = ureal('k',2,'Percentage',30);
+m = ureal('m',3,'Percentage',10);
+c = ureal('c',1,'Percentage',10);
+k = ureal('k',2,'Percentage',10);
 %
 u = icsignal(1);
 x = icsignal(1);
@@ -76,6 +76,8 @@ M.Output = x;
 M.Equation{1} = equate(x,tf(1,[1,0])*xdot);
 M.Equation{2} = equate(xdot,tf(1/m,[1,0])*(u-k*x-c*xdot));
 G = M.System;
+
+Sens_func_O = loopsens(G,1);
 
 % G is the system in 1dof
 
@@ -101,6 +103,16 @@ gainM = 1;
 M = gainM*tf(nuM,dnM)
 tol = 1e-6;
 
+% Comparison of the original nominal plant and the desired plant
+figure
+bode(G.Nominal,'r-',M,'b--',omega), grid
+title('Bode plots of uncertain plant')
+legend('Nominal plant','Desired plant')
+
+% --------------------------------------------------------------------------
+%% Building the Sensitivity Functions
+% --------------------------------------------------------------------------
+% Sensitivity Function desired
 nuWp = [2 1];
 dnWp = [2 tol];
 gainWp = 5e-1;
@@ -110,20 +122,58 @@ Wp = gainWp*tf(nuWp,dnWp)
 %range which will ensure closeness between the system and model and sufficient
 %disturbance attenuation at the system output. 
 
+% G.Nominal Sensitivity
+S_org = Sens_func_O.Si;
+% G.Nominal Sensitivity
+T_org = Sens_func_O.Ti;
+% G.Nominal Sensitivity
+KS_org = Sens_func_O.Si*1; % Since there is no Controller
+
+% Complementary Sensitivity Function desired
 nuWu = [0.05 1];
 dnWu = [0.0001 1];
 gainWu = 5e-2;
 Wu = gainWu*tf(nuWu,dnWu)
 % This weighting function ensures attenuation of componetns with frequency over 10rad/s
 
+% Control Sensitivity Function desired
+nuwWks = [0.05 1];
+dnwWks = [0.001 1];
+gainwWks = 5e-2;
+Wks = gainwWks*tf(nuwWks,dnwWks)
+
 % Plot the weighting functions
 figure
-bodemag(Wp,'r-',Wu,'b--',M,'g--'), 
+%subplot(2, 2, 1)
+bodemag(Wp,'r-',Wu,'b--',M,'g--',Wks,'k--'), 
 grid on;
 title('Weighting functions')
-legend('Wp','Wu','M')
+legend('Wp','Wu','M','Wks')
 
-% Inverse weighthing Function
+% -----------------------------------------------
+% plot the bodes into 4 different subplots
+% Need to evaluate if these are the deisred ones
+
+omega = logspace(-1,2,100);
+figure
+subplot(2,2,1)
+bode(Wp,S_org,omega)
+title('Sensitivity of Wp')
+legend('Desired S','Nominal S')
+subplot(2,2,2)
+bode(Wu,T_org,omega)
+title('Sensitivity of Wu')
+legend('Desired T','Nominal T')
+subplot(2,2,3)
+bode(G.Nominal,M,omega)
+title('Bode of M')
+legend('Desired M','Nominal M')
+subplot(2,2,4)
+bode(Wks,KS_org,omega)
+title('Sensitivity of Wks')
+legend('Desired KS','Nominal KS')
+
+% Inverse weighthing Functiosn
 % to achieve the desired performance of disturbance rejection (or, of tracking
 %error) it is necessary to satisfy the inequality |Wp(I + GK)−1|∞ < 1. Since
 %Wp is a scalar function in the present case, the singular values of the sensitivity
@@ -135,7 +185,7 @@ bodemag(1/Wp,'r-',omega), grid
 title('Inverse of Performance Weighting Function')
 
 % olp_mds
-% building the opne model of the uncertain mass-damper-spring
+%% building the opne model of the uncertain mass-damper-spring
 % figure 8.8
 %
 %
@@ -157,6 +207,7 @@ input_to_Wu = '[ control ]';            % only 1 input
 sys_ic = sysic;
 
 
+%% H - inf synthesis of the controller
 % hin_mds
 nmeas = 1;
 ncon = 1;
@@ -165,41 +216,42 @@ gmax = 10;
 tol = 0.001;
 [K_hin,clp,gam] = hinfsyn(sys_ic.NominalValue,nmeas,ncon,[gmin,gmax]);
 
-% Bode of thwe Controller
+% Bode of the Controller
 figure
-bode(K_hin,'b--'), grid on;
+bode(K_hin,'b-'), grid on;
 title('Bode plots of controller')
 legend('K_hin')
 
-disp(' ')
-get(K_hin)
-disp(' ')
-disp('Closed-loop poles')
-sp = pole(clp)
-omega = logspace(-2,6,100);
-sigma(clp,'m-',omega), grid
-title('Singular Value Plot of clp')
-K = K_hin;
-
-% Robust stability analysis of the closed loop
+%% Robust stability analysis of the closed loop
 clp_ic= lft(sys_ic,K_hin)
 omega = logspace(-2,2,100);
 clp_g = ufrd(clp_ic,omega);
-opt = robopt('Display','on')
-[stabmarg,destabu,report,info]=robuststab(clp_g,opt);
+opt = robopt('Display','on');
+[stabmarg,destabu,report,info]=robuststab(clp_g,opt)
 report
 figure
-semilogx(info.MussvBnds(1,1),'r-',info.MussvBnds(1,2),'b--')
+%semilogx(info.MussvBnds(1,1),'r-',info.MussvBnds(1,2),'b--')
+%legend
 
 % Robust performance analysis of the closed loop
-opt = robopt('Display','on')
-[stabmarg,destabu,report,info]=robustperf(clp_g,opt);
+opt = robopt('Display','on');
+[stabmarg,destabu,report,info]=robustperf(clp_g,opt)
 report
-figure
-semilogx(info.MussvBnds(1,1),'r-',info.MussvBnds(1,2),'b--')
+%figure
+%semilogx(info.MussvBnds(1,1),'r-',info.MussvBnds(1,2),'b--')
 
 
-%% New System 
+
+
+
+
+
+
+
+
+
+
+%% New System to obtain the Sensitivity Functions and the Closed Loop
 systemnames = ' G ';
 inputvar = '[ ref; dist; control ]';         % the names of the input TFs
 outputvar = '[ G+dist; control; ref-G-dist ]';     % the names of the output TFs
@@ -208,9 +260,9 @@ sim_ic = sysic;
 cls = lft(sim_ic,K_hin);
 
 % Transfer Functions obtained via 
-To = cls(1,2);
+T0 = cls(1,1);
 S0 = cls(1,2);
-KS0 = cls(2,2);
+KS0 = -cls(2,2);
 
 % plot all the TFs
 figure
@@ -220,25 +272,42 @@ legend('To','S0','KS0')
 
 % Plot the weighting functions with the Target ->z Wrong ! S
 figure
-bodemag(Wp,'ro',Wu,'bo',M,'go'), 
+bode(1/Wp,'r.',1/Wu,'b.',M,'g.'), 
 grid on;
 hold on;
 title('Weighting functions with target Sensitivity TF')
-bode(To,'r-',S0,'b--',KS0,'g--'), grid on;
+bode(T0,'r-',S0,'b--',KS0,'g--'), grid on;
 legend('Wp','Wu','M','To','S0','KS0')
 
 % Obtain responses of the uncertrain systems
 figure
-omega = logspace(-2,2,100);
-T64 = gridureal(To,'c',4,'k',4,'m',4);
+T64 = gridureal(T0,'c',4,'k',4,'m',4);
 bode(M,'r-',T64,'b--',omega), grid on;
 title('Bode plots of uncertain plant')
-legend('M','To')
+legend('M','T0')
 
 % Comparison between sensitivity of the uncertain system and inverse performance weigting function
+% All the Dynamic Systems must be below the 1/Wp
 figure
 omega = logspace(-3,2,100);
 S64 = gridureal(S0,'c',4,'k',4,'m',4);
 bode(1/Wp,'r-',S64,'b--',omega), grid on;
 title('Bode plots of the Sensitivity TF')
-legend('1/Wp','S0')
+legend('1/Wp','S0') 
+
+% Comparison between Complementary sensitivity of the uncertain system and inverse performance weigting function
+% all the Dynamic Systems must be below the 1/Wu
+figure
+omega = logspace(-3,2,100);
+S64 = gridureal(T0,'c',4,'k',4,'m',4);
+bode(1/Wu,'r-',S64,'b--',omega), grid on;
+title('Bode plots of the Complementary Sensitivity TF')
+legend('1/Wu','KS0')
+
+% Comparison between Control sensitivity of the uncertain system and inverse performance weigting function
+figure
+omega = logspace(-3,2,100);
+KS64 = gridureal(KS0,'c',4,'k',4,'m',4);
+bode(KS64,'b--',omega), grid on;
+title('Bode plots of the Complementary Sensitivity TF')
+legend('KS0')
