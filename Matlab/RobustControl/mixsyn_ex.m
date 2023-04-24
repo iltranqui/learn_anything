@@ -24,17 +24,17 @@ tol = 0.1;
 nuWS = [0.001 2];
 dnWS = [0.05 1];
 gainWS = 5e0;
-WS = gainWS*tf(nuWS,dnWS)
+WS = gainWS*tf(nuWS,dnWS);
 % Complementary Sensitivity Function desired
 nuWT = [0.05 1];
 dnWT = [0.0001 1];
 gainWT = 5e-2;
-WT = gainWT*tf(nuWT,dnWT)
+WT = gainWT*tf(nuWT,dnWT);
 % Control Sensitivity Function desired
 nuWK0 = [0.05 1];
 dnWK0 = [0.001 1];
 gainWK0 = 5e-2;
-WK0 = gainWK0*tf(nuWK0,dnWK0)
+WK0 = gainWK0*tf(nuWK0,dnWK0);
 
 % Plot of WS, WK0 and WT
 figure(1)
@@ -46,22 +46,25 @@ legend('WS','WK0','WT','WS+WT')
 
 [K_h,cl_h,gam,info] = mixsyn(G,WS,WK0,WT);
 
-%% Analysis of the H-inf synthesis
+%% Analysis of the H-inf synthesis for all Wegihthing Functions 
+
 looptransfer = loopsens(G.Nominal,K_h);
 L = looptransfer.Lo;
 T = looptransfer.To;
+S = looptransfer.So;
+K0 = looptransfer.So*K_h;
 I = eye(size(L));
 figure(2)
 omega = logspace(-1,3,100);
-sigma(I+L,'b-',WS/gam,'r--',T,'b-.',gam/WT,'r.',omega)
+sigma(S,'b-',gam/WS,'b-.',T,'r-',gam/WT,'r-.',K0,'cyan-',gam/WK0,'cyan-.',omega)
 grid
-legend('1/\sigma(S) performance', ...
+legend('\sigma(S) performance', ...
 '\sigma(1/WS) robustness bound',...
-'\sigma(T) robustness', ...
+'\sigma(T) performance', ...
 '\sigma(1/WT) robustness bound',...
-%'\sigma(K0) performance bound', ...
-%'\sigma(1/WK0) robustness bound'
-)
+'\sigma(K0) performance ', ...
+'\sigma(1/WK0) robustness bound')
+
 figure(3)
 omega = logspace(-1,3,100);
 sigma(L,'b-',WS/gam,'r--',gam/WT,'r.',omega)
