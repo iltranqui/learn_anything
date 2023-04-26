@@ -31,8 +31,8 @@ dnWT = [0.0001 1];
 gainWT = 5e-2;
 WT = gainWT*tf(nuWT,dnWT);
 % Control Sensitivity Function desired
-nuWK0 = [0.05 1];
-dnWK0 = [0.001 1];
+nuWK0 = conv([0.05 1],[0.01 1]);
+dnWK0 = conv([0.001 1],[0.001 1]);
 gainWK0 = 5e-2;
 WK0 = gainWK0*tf(nuWK0,dnWK0);
 
@@ -56,7 +56,7 @@ K0 = looptransfer.So*K_h;
 I = eye(size(L));
 figure(2)
 omega = logspace(-1,3,100);
-sigma(S,'b-',gam/WS,'b-.',T,'r-',gam/WT,'r-.',K0,'cyan-',gam/WK0,'cyan-.',omega)
+sigma(S,'b-',gam/WS,'b.',T,'r-',gam/WT,'r.',K0,'cyan-',gam/WK0,'cyan.',omega)
 grid
 legend('\sigma(S) performance', ...
 '\sigma(1/WS) robustness bound',...
@@ -65,9 +65,11 @@ legend('\sigma(S) performance', ...
 '\sigma(K0) performance ', ...
 '\sigma(1/WK0) robustness bound')
 
+%% PLot the resulting closed Loop
+Loop = series(K_h,G.Nominal);
+Cl = feedback(Loop, 1);
 figure(3)
-omega = logspace(-1,3,100);
-sigma(L,'b-',WS/gam,'r--',gam/WT,'r.',omega)
+bode(G.Nominal,'b-',Loop,'r-',Cl,'g-.')
 grid
-legend('\sigma(L)','\sigma(WS) performance bound', ...
-'\sigma(1/WT) robustness bound')
+legend('G (Plant)','L (OpenLoop)','Cl (Closed Loop)')
+
