@@ -63,9 +63,10 @@ sysic;
 % From mod_mds .> somehow
 % Uncertain model of the Mass/Damper/Spring system
 %
-m = ureal('m',3,'Percentage',10);
-c = ureal('c',1,'Percentage',10);
-k = ureal('k',2,'Percentage',10);
+m = ureal('m',3.5,'Percentage',40);
+c = ureal('c',2,'Percentage',40);
+k = ureal('k',2,'Percentage',40);
+
 %
 u = icsignal(1);
 x = icsignal(1);
@@ -76,8 +77,6 @@ M.Output = x;
 M.Equation{1} = equate(x,tf(1,[1,0])*xdot);
 M.Equation{2} = equate(xdot,tf(1/m,[1,0])*(u-k*x-c*xdot));
 G = M.System;
-
-Sens_func_O = loopsens(G,1);
 
 % G is the system in 1dof
 
@@ -94,9 +93,10 @@ title('Bode plots of uncertain plant')
 legend('Nominal plant','Uncertain plant')
 
 % wts mds.m updated alos with v2013
-% the desired behaviour of the function
+% the desired behaviour of the function, the desired plant, even with the uncertainties 
+% has to behave like this plant. Hinf will be doing exactly this
 Time = 1; % sec
-smorz = 0.7; % smorzamento
+smorz = 0.8; % smorzamento
 nuM = 1;
 dnM = [Time^2 Time*smorz*1.0 1];
 gainM = 1;
@@ -104,85 +104,50 @@ M = gainM*tf(nuM,dnM)
 tol = 1e-6;
 
 % Comparison of the original nominal plant and the desired plant
-figure
-bode(G.Nominal,'r-',M,'b--',omega), grid
+figure(2)
+bode(G.Nominal,'r--',M,'b-x',G64,'k:.',omega), grid
 title('Bode plots of uncertain plant')
-legend('Nominal plant','Desired plant')
+legend('Nominal plant','Desired plant','Uncertain plant')
 
 % --------------------------------------------------------------------------
-%% Building the Sensitivity Functions
+%% Building the Sensitivity Functions for mixsyn
 % --------------------------------------------------------------------------
+% thoguh i don'0t have yet the controller, i can build the sensitivity functions
+% for the desired plant, and then i will use them to build the controller
 % Sensitivity Function desired
-nuWp = [2 1];
-dnWp = [2 tol];
-gainWp = 5e-1;
-Wp = gainWp*tf(nuWp,dnWp)
+nuWS = [1];
+dnWS = [0.03 1];
+gainWS = 1e1;
+WS = gainWS*tf(nuWS,dnWS)
 % This weighting function has the purpose to ensure the gain of
 %the loop from r and d to the error y − yM to be of order tol in the low frequency
 %range which will ensure closeness between the system and model and sufficient
 %disturbance attenuation at the system output. 
 
-% G.Nominal Sensitivity
-S_org = Sens_func_O.Si;
-% G.Nominal Sensitivity
-T_org = Sens_func_O.Ti;
-% G.Nominal Sensitivity
-KS_org = Sens_func_O.Si*1; % Since there is no Controller
-
 % Complementary Sensitivity Function desired
-nuWu = [0.05 1];
-dnWu = [0.0001 1];
-gainWu = 5e-2;
-Wu = gainWu*tf(nuWu,dnWu)
+nuWt = [0.08 1];
+dnWt = [0.002 1];
+gainWt = 5e-1;
+Wt = gainWt*tf(nuWt,dnWt)
 % This weighting function ensures attenuation of componetns with frequency over 10rad/s
 
 % Control Sensitivity Function desired
-nuwWks = [0.05 1];
-dnwWks = [0.001 1];
-gainwWks = 5e-2;
-Wks = gainwWks*tf(nuwWks,dnwWks)
+nuWKS = [0.05 1];
+dnWKS = [0.001 1];
+gainWKS = 5e-2;
+Wks = gainWKS*tf(nuWKS,dnWKS)
 
 % Plot the weighting functions
-figure
+figure(3)
 %subplot(2, 2, 1)
-bodemag(Wp,'r-',Wu,'b--',M,'g--',Wks,'k--'), 
+optsbode = bodeoptions;
+optsbode.MagUnits = 'abs';
+bodeplot(WS,'r-',Wt,'g--',Wks,'k--',optsbode), 
 grid on;
 title('Weighting functions')
-legend('Wp','Wu','M','Wks')
+legend('WS','WT','Wks')
 
-% -----------------------------------------------
-% plot the bodes into 4 different subplots
-% Need to evaluate if these are the deisred ones
-
-omega = logspace(-1,2,100);
-figure
-subplot(2,2,1)
-bode(Wp,S_org,omega)
-title('Sensitivity of Wp')
-legend('Desired S','Nominal S')
-subplot(2,2,2)
-bode(Wu,T_org,omega)
-title('Sensitivity of Wu')
-legend('Desired T','Nominal T')
-subplot(2,2,3)
-bode(G.Nominal,M,omega)
-title('Bode of M')
-legend('Desired M','Nominal M')
-subplot(2,2,4)
-bode(Wks,KS_org,omega)
-title('Sensitivity of Wks')
-legend('Desired KS','Nominal KS')
-
-% Inverse weighthing Functiosn
-% to achieve the desired performance of disturbance rejection (or, of tracking
-%error) it is necessary to satisfy the inequality |Wp(I + GK)−1|∞ < 1. Since
-%Wp is a scalar function in the present case, the singular values of the sensitivity
-%function (I +GK)^−1 over the frequency range must lie below that of 1/wp .
-
-figure
-omega = logspace(-3,3,1000);
-bodemag(1/Wp,'r-',omega), grid
-title('Inverse of Performance Weighting Function')
+%% Inverse weighthing Functiosn
 
 % olp_mds
 %% building the opne model of the uncertain mass-damper-spring
@@ -196,10 +161,10 @@ title('Inverse of Performance Weighting Function')
 %
 %
 % open-loop connection with the weighting function
-% How to erite an uncertain system
-systemnames = ' G M Wp Wu ';              % the names of the TF to insert
+% How to write an uncertain system
+systemnames = ' G M WS Wt ';              % the names of the TF to insert
 inputvar = '[ ref; dist; control ]';         % the names of the input TFs
-outputvar = '[ Wp; -Wu; ref-G-dist ]';     % the names of the output TFs
+outputvar = '[ WS; -Wt; ref-G-dist ]';     % the names of the output TFs
 input_to_G = '[ control ]';
 input_to_M =  '[ ref ]';             % Since G has only 1 input 
 input_to_Wp = '[ G+dist-M ]';             % only 1 input
@@ -214,7 +179,7 @@ ncon = 1;
 gmin = 0.1;
 gmax = 10;
 tol = 0.001;
-[K_hin,clp,gam] = hinfsyn(sys_ic.NominalValue,nmeas,ncon,[gmin,gmax]);
+[K_hin,clp,gam] = hinfsyn(sys_ic.NominalValue,nmeas,ncon,[gmin,gmax])
 
 % Bode of the Controller
 figure
