@@ -125,7 +125,7 @@ WS = gainWS*tf(nuWS,dnWS)
 %disturbance attenuation at the system output. 
 
 % Complementary Sensitivity Function desired
-nuWt = [0.08 1];
+nuWt = [0.04 1];
 dnWt = [0.002 1];
 gainWt = 5e-1;
 Wt = gainWt*tf(nuWt,dnWt)
@@ -147,18 +147,51 @@ grid on;
 title('Weighting functions')
 legend('WS','WT','Wks')
 
+% --------------------------------------------------------------------------
 %% Inverse weighthing Functiosn
+% --------------------------------------------------------------------------
+nuM = 1;
+dnM = [1.0^2 2*0.7*1.0 1];
+gainM = 1.0;
+M = gainM*tf(nuM,dnM);
+tol = 10^(-2);
+nuWp = [2 1];
+dnWp = [2 tol];
+gainWp = 5*10^(-1);
+Wp = gainWp*tf(nuWp,dnWp);
+nuWu = [0.05 1];
+dnWu = [0.0001 1];
+gainWu = 5.0*10^(-2);
+Wu = gainWu*tf(nuWu,dnWu);
 
-% olp_mds
+% plotting 
+% Plot the weighting functions
+figure(4)
+%subplot(2, 2, 1)
+optsbode = bodeoptions;
+optsbode.MagUnits = 'abs';
+bodeplot(Wp,'r-',Wu,'g--',optsbode), 
+grid on;
+title('Weighting functions')
+legend('Wp','Wu')
+
+
+
+% --------------------------------------------------------------------------
+
 %% building the opne model of the uncertain mass-damper-spring
+% olp_mds
 % figure 8.8
-%
-%
-%
-%
-%
-%
-%
+% open-loop connection with the weighting function
+% How to write an uncertain system
+systemnames = ' G M Wp Wu ';              % the names of the TF to insert
+inputvar = '[ ref; dist; control ]';         % the names of the input TFs
+outputvar = '[ Wp; -Wu; ref-G-dist ]';     % the names of the output TFs
+input_to_G = '[ control ]';
+input_to_M =  '[ ref ]';             % Since G has only 1 input 
+input_to_Wp = '[ G+dist-M ]';             % only 1 input
+input_to_Wu = '[ control ]';            % only 1 input
+sys_ic_init = sysic;
 %
 % open-loop connection with the weighting function
 % How to write an uncertain system
@@ -179,7 +212,7 @@ ncon = 1;
 gmin = 0.1;
 gmax = 10;
 tol = 0.001;
-[K_hin,clp,gam] = hinfsyn(sys_ic.NominalValue,nmeas,ncon,[gmin,gmax])
+[K_hin,clp,gam] = hinfsyn(sys_ic_init.NominalValue,nmeas,ncon,[gmin,gmax])
 
 % Bode of the Controller
 figure
