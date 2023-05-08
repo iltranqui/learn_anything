@@ -206,6 +206,10 @@ sys_ic = sysic;
 
 
 %% H - inf synthesis of the controller
+% a controller K with performance
+%       * GAM <= GMIN when GMIN is achievable
+%       * GMIN < GAM <= GMAX when GMAX but not GMIN is achievable
+%       If GMAX itself is not achievable, hinfsyn returns GAM=Inf and K=CL=[].
 % hin_mds
 nmeas = 1;
 ncon = 1;
