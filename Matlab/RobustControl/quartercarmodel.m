@@ -125,3 +125,167 @@ for i=1:3
 end
 
 gamma
+
+% The three controllers achieve closed-loop H∞ norms of 0.94, 0.67 and 0.89, respectively. 
+% Construct the corresponding closed-loop models and compare the gains from road disturbance to x_b
+% s_d and a_b for the passive and active suspensions.
+% Observe that all three controllers reduce suspension deflection and body acceleration below 
+% the rattlespace frequency (23 rad/s).
+
+% Closed-loop models
+K.u = {'sd(suspension_travel)','ab(body_acceleration)'};  K.y = 'u';
+CL = connect(qcar,Act.Nominal,K,'r(dist)',{'xb(car_position)';'sd(suspension_travel)';'ab(body_acceleration)'});
+
+figure(6)
+bodemag(qcar(:,'r(dist)'),'b', CL(:,:,1),'r-.', ...
+   CL(:,:,2),'m-.', CL(:,:,3),'k-.',{1,140}), grid
+legend('Open-loop','Comfort','Balanced','Handling','location','SouthEast')
+title('Body travel, suspension deflection, and body acceleration due to road')
+
+
+
+
+
+%% Time Doman Simulation
+% To further evaluate the three designs, perform time-domain simulations using a road disturbance signal r(t) representing a road bump of height 5 cm.
+% Road disturbance
+
+t = 0:0.0025:1;
+roaddist = zeros(size(t));
+roaddist(1:101) = 0.025*(1-cos(8*pi*t(1:101)));
+
+% Closed-loop model
+SIMK = connect(qcar,Act.Nominal,K,'r(dist)',{'xb(car_position)';'sd(suspension_travel)';'ab(body_acceleration)';'fs(act)'});
+
+% Simulate
+p1 = lsim(qcar(:,1),roaddist,t);
+y1 = lsim(SIMK(1:4,1,1),roaddist,t);
+y2 = lsim(SIMK(1:4,1,2),roaddist,t);
+y3 = lsim(SIMK(1:4,1,3),roaddist,t);
+
+
+% Plot results
+figure(7);
+subplot(211)
+plot(t,p1(:,1),'b',t,y1(:,1),'r.',t,y2(:,1),'m.',t,y3(:,1),'k.',t,roaddist,'g')
+grid on;
+title('Body travel'), ylabel('x_b (m)')
+subplot(212)
+plot(t,p1(:,3),'b',t,y1(:,3),'r.',t,y2(:,3),'m.',t,y3(:,3),'k.',t,roaddist,'g')
+title('Body acceleration'), ylabel('a_b (m/s^2)')
+
+subplot(211)
+plot(t,p1(:,2),'b',t,y1(:,2),'r.',t,y2(:,2),'m.',t,y3(:,2),'k.',t,roaddist,'g')
+title('Suspension deflection'), xlabel('Time (s)'), ylabel('s_d (m)')
+subplot(212)
+plot(t,zeros(size(t)),'b',t,y1(:,4),'r.',t,y2(:,4),'m.',t,y3(:,4),'k.',t,roaddist,'g')
+title('Control force'), xlabel('Time (s)'), ylabel('f_s (kN)')
+legend('Open-loop','Comfort','Balanced','Handling','Road Disturbance','location','SouthEast')
+
+
+
+%% Robust Mu Design
+% So far you have designed H∞ controllers that meet the performance objectives for the nominal actuator model. 
+% Next use μ-synthesis to design a controller that achieves robust performance for the entire family of actuator models. The robust controller is synthesized with the mu-syn 
+% function using the uncertain model qcaric(:,:,2) corresponding to "balanced" performance (β=0.5).
+
+[Krob,rpMU] = musyn(qcaric(:,:,2),nmeas,ncont)
+
+% Closed-loop model (nominal)
+Krob.u = {'sd(suspension_travel)','ab(body_acceleration)'};
+Krob.y = 'u';
+SIMKrob = connect(qcar,Act.Nominal,Krob,'r(dist)',{'xb(car_position)';'sd(suspension_travel)';'ab(body_acceleration)';'fs(act)'});
+
+% Simulate the nominal response to a road bump with the robust controller Krob. 
+% The responses are similar to those obtained with the "balanced" H∞ controller.
+
+% Simulate
+p1 = lsim(qcar(:,1),roaddist,t);
+y1 = lsim(SIMKrob(1:4,1),roaddist,t);
+
+% Plot results
+figure(8)
+clf, subplot(221)
+plot(t,p1(:,1),'b',t,y1(:,1),'r',t,roaddist,'g')
+title('Body travel'), ylabel('x_b (m)')
+subplot(222)
+plot(t,p1(:,3),'b',t,y1(:,3),'r')
+title('Body acceleration'), ylabel('a_b (m/s^2)')
+subplot(223)
+plot(t,p1(:,2),'b',t,y1(:,2),'r')
+title('Suspension deflection'), xlabel('Time (s)'), ylabel('s_d (m)')
+subplot(224)
+plot(t,zeros(size(t)),'b',t,y1(:,4),'r')
+title('Control force'), xlabel('Time (s)'), ylabel('f_s (kN)')
+legend('Open-loop','Robust design','location','SouthEast')
+
+% Next simulate the response to a road bump for 100 actuator models randomly selected from the uncertain model set Act.
+rng('default'), nsamp = 100;  clf
+
+% Uncertain closed-loop model with balanced H-infinity controller
+figure(9)
+CLU = connect(qcar,Act,K(:,:,2),'r(dist)',{'xb(car_position)';'sd(suspension_travel)';'ab(body_acceleration)'});
+lsim(usample(CLU,nsamp),'b',CLU.Nominal,'r',roaddist,t)
+title('Nominal "balanced" design')
+legend('Perturbed','Nominal','location','SouthEast')
+
+% Uncertain closed-loop model with balanced robust controller
+figure(10)
+CLU = connect(qcar,Act,Krob,'r(dist)',{'xb(car_position)';'sd(suspension_travel)';'ab(body_acceleration)'});
+lsim(usample(CLU,nsamp),'b',CLU.Nominal,'r',roaddist,t)
+title('Robust "balanced" design')
+legend('Perturbed','Nominal','location','SouthEast')
+
+% The robust controller Krob reduces variability due to model uncertainty and delivers more consistent performance.
+
+
+
+%% Controller Simplification: Order Reduction
+
+%The robust controller Krob has relatively high order compared to the plant.
+%  You can use the model reduction functions to find a lower-order controller that achieves the same level of robust performance.
+% Use reduce to generate approximations of various orders.
+
+% Create array of reduced-order controllers
+NS = order(Krob);
+StateOrders = 1:NS;
+Kred = reduce(Krob,StateOrders);
+
+
+
+% Closed-loop model (nominal)
+Krob.u = {'sd(suspension_travel)';'ab(body_acceleration)'};
+Krob.y = 'u';
+SIMKrob = connect(qcar,Act.Nominal,Krob,'r(dist)',{'xb(car_position)';'sd(suspension_travel)';'ab(body_acceleration)'});
+
+% Compute robust performance margin for each reduced controller
+gamma = 1;
+CLP = lft(qcaric(:,:,2),Kred);
+for k=1:NS
+   PM(k) = robgain(CLP(:,:,k),gamma);
+end
+
+% Compare robust performance of reduced- and full-order controllers
+PMfull = PM(end).LowerBound;
+plot(StateOrders,[PM.LowerBound],'b-o',...
+   StateOrders,repmat(PMfull,[1 NS]),'r');
+grid
+title('Robust performance margin as a function of controller order')
+legend('Reduced order','Full order','location','SouthEast')
+
+
+%% Controller Simplification: Fixed-Order Tuning
+% Alternatively, you can use musyn to directly tune low-order controllers.
+%  This is often more effective than a-posteriori reduction of the full-order controller Krob. 
+% For example, tune a third-order controller to optimize its robust performance.
+
+% Create tunable 3rd-order controller 
+K = tunableSS('K',3,ncont,nmeas);
+
+% Tune robust performance of closed-loop system CL
+CL0 = lft(qcaric(:,:,2),K);
+[CL,RP] = musyn(CL0);
+
+
+K3 = getBlockValue(CL,'K');
+bode(K3)
