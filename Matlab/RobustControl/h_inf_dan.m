@@ -6,36 +6,44 @@ d = [1,0.441820758123519,111.335782541048,36.3843645886072,3740.96166435174,805.
 
 G= tf([n],[d]);
 G.InputName = 'u(force)';  
-G.OutputName = 'y(position)';
+G.OutputName = 'y_{position]';
 
 % Bode plot of the transfer function
 figure(1)
 bodemag(G)
+title('Bode plot of the transfer function G(s)')
 grid on
 
 % disturbance transfer function for lame d'aria and measurement
 Wact = 0.8*tf([1 50],[1 500]);  Wact.u = 'u(dist)';  Wact.y = 'e1';  % Actuator force with a weight of 0.8 and a low-pass filter with a corner frequency of 50 rad/s
 Wmes = ss(0.5); Wmes.u = 'd(meas)';   Wmes.y = 'Wd3';  % Disturbance on the measurement with a constant weight of 0.5
 
-actuator  = sumblk('y1 = y(position)+e1)');
-measurement = sumblk('y2 = y1+Wd3');
+actuator  = sumblk('y_{post_dist} = y_{position]+e1');
+measurement = sumblk('y_{postmes} = y_{post_dist}+Wd3');
 
 ICinputs = {'u(force)';'u(dist)';'d(meas)'};
-ICoutputs = {'y2','y(position)','y1'};
+ICoutputs = {'y_{postmes}','y_{position]','y_{post_dist}'};
 qcaric = connect(G,Wact,Wmes,actuator,measurement,ICinputs,ICoutputs);
 
 % plot all 3 transfer functions of system qcaric 
 % Open Loop
 figure(2)
 bodemag(qcaric)
+title('Bode plot of Open Loop TF qcaric(s)')
 grid on
 
-% Controller 
+%% Controller 
 K = tf([1 0.1],[1 0.01]); K.u = 'error1'; K.y = 'u(force)';  % Controller with a low-pass filter with a corner frequency of 0.1 rad/s
 
-control = sumblk('error1 = y2');
+control = sumblk('error1 = -y_{postmes}');
 
 % Closed-loop models
-CL = connect(qcaric,K, ...
+CL = connect(qcaric,K,control, ...
     {'u(dist)';'d(meas)'}, ...
-    {'y(position)','y1','y2'});
+    {'y_{position]','y_{post_dist}','y_{postmes}'});
+
+% plot all 6 transfer functions of system CL
+figure(3)
+bodemag(CL)
+title('Bode plot of Closed Loop TF CL(s)')
+grid on

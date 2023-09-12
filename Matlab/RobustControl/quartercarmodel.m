@@ -50,7 +50,7 @@ ActNom = tf(1,[1/60 1]);
 % for modeling errors and variability in the actuator and quarter-car models. This family consists of a nominal model with a frequency-dependent amount of uncertainty.
 
 Wunc = makeweight(0.40,15,3);
-unc = ultidyn('unc',[1 1],'SampleStateDim',5);
+unc = ultidyn('unc',[1 1],'SampleStateDim',50);
 Act = ActNom*(1 + Wunc*unc);
 Act.InputName = 'u';
 Act.OutputName = 'fs(act)';
@@ -67,6 +67,7 @@ Wroad = ss(0.07);  Wroad.u = 'd1';   Wroad.y = 'r(dist)';   % Road disturbance w
 Wact = 0.8*tf([1 50],[1 500]);  Wact.u = 'u';  Wact.y = 'e1';  % Actuator force with a weight of 0.8 and a low-pass filter with a corner frequency of 50 rad/s
 Wd2 = ss(0.01);  Wd2.u = 'd2';   Wd2.y = 'Wd2';  % Disturbance on the measurement cnstant weight of 0.01
 Wd3 = ss(0.5);   Wd3.u = 'd3';   Wd3.y = 'Wd3';  % Disturbance on the measurement with a constant weight of 0.5
+% Can this be approximated to a white noise ? 
 
 % Specify closed-loop targets for the gain from road disturbance r to suspension deflection s_d (handling)
 % and body acceleration a_d b(comfort). 
