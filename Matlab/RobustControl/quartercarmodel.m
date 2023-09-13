@@ -111,6 +111,7 @@ sdmeas  = sumblk('y1 = sd(suspension_travel)+Wd2');
 abmeas = sumblk('y2 = ab(body_acceleration)+Wd3');
 ICinputs = {'d1';'d2';'d3';'u'};
 ICoutputs = {'e1';'e2';'e3';'y1';'y2'};
+% Selecting only the 3rd and 2nd output of the qcar model
 qcaric = connect(qcar(2:3,:),Act,Wroad,Wact,Wab,Wsd,Wd2,Wd3,...
                  sdmeas,abmeas,ICinputs,ICoutputs)
 
