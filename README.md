@@ -5,4 +5,5 @@
 
  * Time Series
  * Natural Language Processing
- * Computer Vision
+ * Computer Vision -> current focus 
+    1. Filters (Passabasso e Passalto)
