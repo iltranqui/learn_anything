@@ -1,2 +1,10 @@
 
 *.asv
+ComputerVision/data
+ComputerVision/segnet_basic_dsc_training_progress_images
+ComputerVision/segnet_basic_training_progress_images
+alps.jpg
+city.jpg
+Jeep.jpg
+jeepbig.jpg
+sample.gif
