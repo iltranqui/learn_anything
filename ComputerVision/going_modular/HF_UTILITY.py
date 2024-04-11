@@ -1,5 +1,6 @@
 import transformers
 import datasets
+import torch
 
 import matplotlib.pyplot as plt
 
@@ -56,3 +57,45 @@ def plot_first_10_images(dataset):
     # Example usage:
     # dataset is your dataset containing "train" data
     #plot_first_10_images(dataset)
+
+def plot_image_numpy(image):
+    """
+    Plot a single RGB image.
+
+    Args:
+    image (numpy.ndarray or torch.Tensor): The image data with shape (3, n, n) or (n, n, 3).
+    """
+    if isinstance(image, torch.Tensor):
+        # Convert tensor to numpy array
+        image = image.numpy()
+    
+    # Check if image shape is (3, n, n)
+    if image.shape[0] == 3:
+        # Transpose the image data to (n, n, 3) for matplotlib
+        image = image.transpose(1, 2, 0)
+
+    # Plot the image
+    plt.imshow(image)
+    plt.axis('off')
+    plt.show()
+
+def plot_mask_numpy(mask):
+    """
+    Plot a single mask image.
+
+    Args:
+    mask (numpy.ndarray or torch.Tensor): The mask data with shape (1, n, n) or (n, n, 1).
+    """
+    if isinstance(mask, torch.Tensor):
+        # Convert tensor to numpy array
+        mask = mask.numpy()
+    
+    # Check if mask shape is (1, n, n)
+    if mask.shape[0] == 1:
+        # Squeeze the mask to remove singleton dimension
+        mask = np.squeeze(mask)
+    
+    # Plot the mask
+    plt.imshow(mask, cmap='gray', vmin=0, vmax=1)
+    plt.axis('off')
+    plt.show()
