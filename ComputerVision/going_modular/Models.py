@@ -10,6 +10,34 @@ from torch.utils.data.sampler import SubsetRandomSampler
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class VGG16(nn.Module):
+    """
+    VGG16 model implementation.
+
+    Args:
+        num_classes (int): Number of output classes.
+
+    Attributes:
+        layer1 (nn.Sequential): First convolutional layer.
+        layer2 (nn.Sequential): Second convolutional layer.
+        layer3 (nn.Sequential): Third convolutional layer.
+        layer4 (nn.Sequential): Fourth convolutional layer.
+        layer5 (nn.Sequential): Fifth convolutional layer.
+        layer6 (nn.Sequential): Sixth convolutional layer.
+        layer7 (nn.Sequential): Seventh convolutional layer.
+        layer8 (nn.Sequential): Eighth convolutional layer.
+        layer9 (nn.Sequential): Ninth convolutional layer.
+        layer10 (nn.Sequential): Tenth convolutional layer.
+        layer11 (nn.Sequential): Eleventh convolutional layer.
+        layer12 (nn.Sequential): Twelfth convolutional layer.
+        layer13 (nn.Sequential): Thirteenth convolutional layer.
+        fully_connected_1 (nn.Sequential): First fully connected layer.
+        fully_connected_2 (nn.Sequential): Second fully connected layer.
+        fully_connected_3 (nn.Sequential): Third fully connected layer.
+
+    Methods:
+        forward(x): Forward pass of the model.
+
+    """
     def __init__(self, num_classes):   # Init -> necessary for the class
         super(VGG16, self).__init__()    # superimposing voer the vgg17 of torch
         self.layer1 = nn.Sequential(        
@@ -117,6 +145,37 @@ class VGG16(nn.Module):
         return out
 
 class VGG19(nn.Module):
+    """
+    VGG19 model implementation.
+
+    Args:
+        num_classes (int): The number of output classes.
+
+    Attributes:
+        conv1_1 (nn.Sequential): First convolutional layer block.
+        conv1_2 (nn.Sequential): Second convolutional layer block.
+        conv2_1 (nn.Sequential): Third convolutional layer block.
+        conv2_2 (nn.Sequential): Fourth convolutional layer block.
+        conv3_1 (nn.Sequential): Fifth convolutional layer block.
+        conv3_2 (nn.Sequential): Sixth convolutional layer block.
+        conv3_3 (nn.Sequential): Seventh convolutional layer block.
+        conv3_4 (nn.Sequential): Eighth convolutional layer block.
+        conv4_1 (nn.Sequential): Ninth convolutional layer block.
+        conv4_2 (nn.Sequential): Tenth convolutional layer block.
+        conv4_3 (nn.Sequential): Eleventh convolutional layer block.
+        conv4_4 (nn.Sequential): Twelfth convolutional layer block.
+        conv5_1 (nn.Sequential): Thirteenth convolutional layer block.
+        conv5_2 (nn.Sequential): Fourteenth convolutional layer block.
+        conv5_3 (nn.Sequential): Fifteenth convolutional layer block.
+        conv5_4 (nn.Sequential): Sixteenth convolutional layer block.
+        fully_connected_1 (nn.Sequential): First fully connected layer block.
+        fully_connected_2 (nn.Sequential): Second fully connected layer block.
+        fully_connected_3 (nn.Sequential): Third fully connected layer block.
+
+    Methods:
+        forward(x): Performs forward pass through the network.
+
+    """
     def __init__(self, num_classes):
         super(VGG19, self).__init__()
         self.conv1_1 = nn.Sequential(
@@ -254,64 +313,73 @@ class VGG19(nn.Module):
         return out
 
 class AlexNet(nn.Module):
+    """
+    AlexNet model implementation.
 
+    Args:
+        num_classes (int): Number of output classes. Default is 10.
 
-    # Input 227*227*3
+    Attributes:
+        conv1 (nn.Sequential): First convolutional layer.
+        conv2 (nn.Sequential): Second convolutional layer.
+        conv3 (nn.Sequential): Third convolutional layer.
+        conv4 (nn.Sequential): Fourth convolutional layer.
+        conv5 (nn.Sequential): Fifth convolutional layer.
+        fully_connected (nn.Sequential): Fully connected layers.
+
+    """
+
     def __init__(self, num_classes=10):
         super(AlexNet, self).__init__()
-
+        # Convolutional layer 1: input (3, 224, 224), output (96, 55, 55)
         self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=96, kernel_size=11, padding=0, stride=4),     # # Input 227*227*3
-            nn.BatchNorm2d(num_features=96),                                                    # Output: 55*55*96    
+            nn.Conv2d(in_channels=3, out_channels=96, kernel_size=11, padding=0, stride=4),
+            nn.BatchNorm2d(num_features=96),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=2)                                               # Output: 27*27*96
+            nn.MaxPool2d(kernel_size=3, stride=2)
         )
 
+        # Convolutional layer 2: input (96, 27, 27), output (256, 27, 27)
         self.conv2 = nn.Sequential(
-            nn.Conv2d(in_channels=96, out_channels=256, kernel_size=5, stride=1, padding=1),    # Input: 27*27*96
-            nn.BatchNorm2d(num_features=256),                                                   # Output: 27*27*256
+            nn.Conv2d(in_channels=96, out_channels=256, kernel_size=5, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=256),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=2)                                               # Output: 13*13*256
+            nn.MaxPool2d(kernel_size=3, stride=2)
         )
 
-        self.conv3 = nn.Sequetial(
-            nn.Conv2d(in_channels=265, out_channels=384, kernel_size=3, stride=1, padding=1),   # Input: 13*13*256
-            nn.BatchNorm2d(num_features=256),                                                   # Output: 13*13*384
+        # Convolutional layer 3: input (256, 13, 13), output (384, 13, 13)
+        self.conv3 = nn.Sequential(
+            nn.Conv2d(in_channels=256, out_channels=384, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=384),
             nn.ReLU()
         )
 
-        self.conv4 = nn.Sequetial(
-            nn.Conv2d(in_channels=384, out_channels=384, kernel_size=3, stride=1, padding=1),   # Input: 13*13*384
-            nn.BatchNorm2d(num_features=256),                                                   # Output: 13*13*384
+        # Convolutional layer 4: input (384, 13, 13), output (384, 13, 13)
+        self.conv4 = nn.Sequential(
+            nn.Conv2d(in_channels=384, out_channels=384, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=384),
             nn.ReLU()
         )
 
-        self.conv5 = nn.Sequetial(
-            nn.Conv2d(in_channels=384, out_channels=256, kernel_size=3, stride=1, padding=1),   # Input: 13*13*384
-            nn.BatchNorm2d(num_features=256),                                                   # Input: 13*13*256
+        # Convolutional layer 5: input (384, 13, 13), output (256, 13, 13)
+        self.conv5 = nn.Sequential(
+            nn.Conv2d(in_channels=384, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=256),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=2)                                               # Output: 6*6*256        
+            nn.MaxPool2d(kernel_size=3, stride=2)
         )
 
-        self.fully_connected = nn.Sequetial(
-            nn.Droput(0.5),
-            nn.Linear(in_features=9216,out_features=4096),
+        # Fully connected layers: input (256 * 6 * 6), output (num_classes)
+        self.fully_connected = nn.Sequential(
+            nn.Dropout(0.5),
+            nn.Linear(in_features=256 * 6 * 6, out_features=4096),
             nn.ReLU(),
-            nn.Droput(0.5),
-            nn.Linear(in_features=4096,out_features=4096),
+            nn.Dropout(0.5),
+            nn.Linear(in_features=4096, out_features=4096),
             nn.ReLU(),
-            nn.Droput(0.5),
-            nn.Linear(in_features=1000,out_features=num_classes)
+            nn.Dropout(0.5),
+            nn.Linear(in_features=4096, out_features=num_classes)
         )
-
-    def forward(self, x):
-        out = self.conv1(x)
-        out = self.conv2(out)
-        out = self.conv3(out)
-        out = self.conv4(out)
-        out = out.reshape(out.size(0), -1)
-        out = self.fully_connected(out)
-        return out
     
 class SegNet(nn.Module):
     """Some Information about MyModule"""
@@ -382,35 +450,35 @@ class SegNet(nn.Module):
         #General Max Pool 2D/Upsampling for DECODING layers
         self.MaxDe = nn.MaxUnpool2d(2, stride=2) 
 
-        self.ConvDe53 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.ConvDe53 = nn.Conv2d(512, 512, kernel_size=3, padding=1)  #  O: N/32*N/32*512
         self.BNDe53 = nn.BatchNorm2d(512, momentum=BN_momentum)
-        self.ConvDe52 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.ConvDe52 = nn.Conv2d(512, 512, kernel_size=3, padding=1)  #  O: N/32*N/32*512
         self.BNDe52 = nn.BatchNorm2d(512, momentum=BN_momentum)
-        self.ConvDe51 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.ConvDe51 = nn.Conv2d(512, 512, kernel_size=3, padding=1)  #  O: N/32*N/32*512
         self.BNDe51 = nn.BatchNorm2d(512, momentum=BN_momentum)
 
-        self.ConvDe43 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.ConvDe43 = nn.Conv2d(512, 512, kernel_size=3, padding=1)  #  O: N/16*N/*512
         self.BNDe43 = nn.BatchNorm2d(512, momentum=BN_momentum)
-        self.ConvDe42 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        self.ConvDe42 = nn.Conv2d(512, 512, kernel_size=3, padding=1)  #  O: N/16*N/*512
         self.BNDe42 = nn.BatchNorm2d(512, momentum=BN_momentum)
-        self.ConvDe41 = nn.Conv2d(512, 256, kernel_size=3, padding=1)
+        self.ConvDe41 = nn.Conv2d(512, 256, kernel_size=3, padding=1)  #  O: N/16*N/*256
         self.BNDe41 = nn.BatchNorm2d(256, momentum=BN_momentum)
 
-        self.ConvDe33 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
+        self.ConvDe33 = nn.Conv2d(256, 256, kernel_size=3, padding=1)  #  O: N/8*N/*256
         self.BNDe33 = nn.BatchNorm2d(256, momentum=BN_momentum)
-        self.ConvDe32 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
+        self.ConvDe32 = nn.Conv2d(256, 256, kernel_size=3, padding=1)  #  O: N/8*N/*256
         self.BNDe32 = nn.BatchNorm2d(256, momentum=BN_momentum)
-        self.ConvDe31 = nn.Conv2d(256, 128, kernel_size=3, padding=1)
+        self.ConvDe31 = nn.Conv2d(256, 128, kernel_size=3, padding=1)  #  O: N/8*N/*128
         self.BNDe31 = nn.BatchNorm2d(128, momentum=BN_momentum)
 
-        self.ConvDe22 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.ConvDe22 = nn.Conv2d(128, 128, kernel_size=3, padding=1)  #  O: N/4*N/4*128
         self.BNDe22 = nn.BatchNorm2d(128, momentum=BN_momentum)
-        self.ConvDe21 = nn.Conv2d(128, 64, kernel_size=3, padding=1)
+        self.ConvDe21 = nn.Conv2d(128, 64, kernel_size=3, padding=1)  #  O: N/4*N/4*64
         self.BNDe21 = nn.BatchNorm2d(64, momentum=BN_momentum)
 
-        self.ConvDe12 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.ConvDe12 = nn.Conv2d(64, 64, kernel_size=3, padding=1)  #  O: N/2*N/2*64
         self.BNDe12 = nn.BatchNorm2d(64, momentum=BN_momentum)
-        self.ConvDe11 = nn.Conv2d(64, self.out_chn, kernel_size=3, padding=1)
+        self.ConvDe11 = nn.Conv2d(64, self.out_chn, kernel_size=3, padding=1)  #  O: N/2*N/2*self.out_chn
         self.BNDe11 = nn.BatchNorm2d(self.out_chn, momentum=BN_momentum)
 
     def forward(self, x):
@@ -533,4 +601,83 @@ class SegNet(nn.Module):
         print("Training complete. Saving checkpoint...")
         Train.save_checkpoint({'epoch': epoch, 'state_dict': model.state_dict(), 'optimizer' : optimizer.state_dict()}, path)
 
+
+
+class GoogleNet(nn.Module):
+    """
+    GoogleNet model implementation.
+
+    Args:
+        num_classes (int): Number of output classes. Default is 10.
+
+    Attributes:
+        conv1 (nn.Conv2d): First convolutional layer.
+        conv2 (nn.Conv2d): Second convolutional layer.
+        conv3 (nn.Conv2d): Third convolutional layer.
+        conv4 (nn.Conv2d): Fourth convolutional layer.
+        conv5 (nn.Conv2d): Fifth convolutional layer.
+        conv6 (nn.Conv2d): Sixth convolutional layer.
+        conv7 (nn.Conv2d): Seventh convolutional layer.
+        conv8 (nn.Conv2d): Eighth convolutional layer.
+        conv9 (nn.Conv2d): Ninth convolutional layer.
+        conv10 (nn.Conv2d): Tenth convolutional layer.
+        conv11 (nn.Conv2d): Eleventh convolutional layer.
+        conv12 (nn.Conv2d): Twelfth convolutional layer.
+        fc1 (nn.Linear): First fully connected layer.
+        fc2 (nn.Linear): Second fully connected layer.
+        maxpool (nn.MaxPool2d): Max pooling layer.
+        avgpool (nn.AvgPool2d): Average pooling layer.
+        dropout (nn.Dropout): Dropout layer.
+        relu (nn.ReLU): ReLU activation function.
+        softmax (nn.Softmax): Softmax activation function.
+    """
+
+    def __init__(self, num_classes=10):
+        super(GoogleNet, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3)
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=192, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=192, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=256, out_channels=480, kernel_size=3, stride=1, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=480, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv6 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv7 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv8 = nn.Conv2d(in_channels=512, out_channels=528, kernel_size=3, stride=1, padding=1)
+        self.conv9 = nn.Conv2d(in_channels=528, out_channels=832, kernel_size=3, stride=1, padding=1)
+        self.conv10 = nn.Conv2d(in_channels=832, out_channels=832, kernel_size=3, stride=1, padding=1)
+        self.conv11 = nn.Conv2d(in_channels=832, out_channels=1024, kernel_size=3, stride=1, padding=1)
+        self.conv12 = nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=3, stride=1, padding=1)
+        self.fc1 = nn.Linear(in_features=1024, out_features=1000)
+        self.fc2 = nn.Linear(in_features=1000, out_features=num_classes)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.avgpool = nn.AvgPool2d(kernel_size=7, stride=1)
+        self.dropout = nn.Dropout(0.4)
+        self.relu = nn.ReLU()
+        self.softmax = nn.Softmax()
+
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        x = self.maxpool(x)
+        x = self.relu(self.conv2(x))
+        x = self.maxpool(x)
+        x = self.relu(self.conv3(x))
+        x = self.relu(self.conv4(x))
+        x = self.relu(self.conv5(x))
+        x = self.maxpool(x)
+        x = self.relu(self.conv6(x))
+        x = self.relu(self.conv7(x))
+        x = self.relu(self.conv8(x))
+        x = self.maxpool(x)
+        x = self.relu(self.conv9(x))
+        x = self.relu(self.conv10(x))
+        x = self.relu(self.conv11(x))
+        x = self.maxpool(x)
+        x = self.relu(self.conv12(x))
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        x = self.dropout(x)
+        x = self.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        return x
 
