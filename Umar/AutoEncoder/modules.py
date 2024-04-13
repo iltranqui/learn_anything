@@ -14,9 +14,35 @@ def exists(x):
     return x is not None
 
 def default(val, d):
+    """
+    Returns the value `val` if it exists, otherwise returns the default value `d`.
+
+    Parameters:
+    val (any): The value to check for existence.
+    d (any or callable): The default value to return if `val` does not exist. If `d` is callable, it will be called to generate the default value.
+
+    Returns:
+    any: The value `val` if it exists, otherwise the default value `d`.
+    """
     if exists(val):
         return val
     return d() if callable(d) else d
+
+def cast_tuple(t, length=1):
+    """
+    Casts the input to a tuple of specified length.
+
+    Args:
+        t: The input value to be casted to a tuple.
+        length: The desired length of the tuple (default is 1).
+
+    Returns:
+        A tuple of length `length` containing the input value `t`.
+
+    """
+    if isinstance(t, tuple):
+        return t
+    return ((t,) * length)
 
 def cast_tuple(t, length = 1):
     if isinstance(t, tuple):
@@ -28,25 +54,68 @@ def identity(t, *args, **kwargs):
 
 # small helper modules
 
-def Upsample(dim, dim_out = None):
+def Upsample(dim, dim_out=None):
+    """
+    Upsamples the input tensor by a factor of 2 and applies a convolutional layer.
+
+    Args:
+        dim (int): The number of input channels.
+        dim_out (int, optional): The number of output channels. If not provided, it defaults to `dim`.
+
+    Returns:
+        nn.Sequential: A sequential module that performs upsampling and convolution.
+
+    """
     return nn.Sequential(
-        nn.Upsample(scale_factor = 2, mode = 'nearest'),
-        nn.Conv2d(dim, default(dim_out, dim), 3, padding = 1)
+        nn.Upsample(scale_factor=2, mode='nearest'),
+        nn.Conv2d(dim, default(dim_out, dim), 3, padding=1)
     )
 
-def Downsample(dim, dim_out = None):
+def Downsample(dim, dim_out=None):
+    """
+    Downsamples the input tensor by a factor of 2 using 2x2 max pooling and 1x1 convolution.
+
+    Args:
+        dim (int): The number of input channels.
+        dim_out (int, optional): The number of output channels. If not provided, it defaults to `dim`.
+
+    Returns:
+        nn.Sequential: A sequential module that performs downsampling.
+
+    """
     return nn.Sequential(
-        Rearrange('b c (h p1) (w p2) -> b (c p1 p2) h w', p1 = 2, p2 = 2),
+        Rearrange('b c (h p1) (w p2) -> b (c p1 p2) h w', p1=2, p2=2),
         nn.Conv2d(dim * 4, default(dim_out, dim), 1)
     )
 
 class RMSNorm(nn.Module):
+    """
+    Root Mean Square Normalization (RMSNorm) module.
+
+    Args:
+        dim (int): The dimension along which to normalize the input tensor.
+
+    Attributes:
+        g (torch.Tensor): The learnable scaling factor.
+
+    """
+
     def __init__(self, dim):
         super().__init__()
         self.g = nn.Parameter(torch.ones(1, dim, 1, 1))
 
     def forward(self, x):
-        return F.normalize(x, dim = 1) * self.g * (x.shape[1] ** 0.5)
+        """
+        Forward pass of the RMSNorm module.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+
+        Returns:
+            torch.Tensor: The normalized tensor.
+
+        """
+        return F.normalize(x, dim=1) * self.g * (x.shape[1] ** 0.5)
 
 # sinusoidal positional embeds
 class SinusoidalPosEmb(nn.Module):

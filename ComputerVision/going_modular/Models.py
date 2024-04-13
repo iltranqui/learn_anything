@@ -681,3 +681,122 @@ class GoogleNet(nn.Module):
         x = self.softmax(x)
         return x
 
+
+class ResNet(nn.Module):
+    """
+    ResNet model implementation.
+
+    Args:
+        num_classes (int): Number of output classes. Default is 10.
+
+    Attributes:
+        conv1 (nn.Conv2d): First convolutional layer.
+        conv2 (nn.Conv2d): Second convolutional layer.
+        conv3 (nn.Conv2d): Third convolutional layer.
+        conv4 (nn.Conv2d): Fourth convolutional layer.
+        conv5 (nn.Conv2d): Fifth convolutional layer.
+        conv6 (nn.Conv2d): Sixth convolutional layer.
+        conv7 (nn.Conv2d): Seventh convolutional layer.
+        conv8 (nn.Conv2d): Eighth convolutional layer.
+        conv9 (nn.Conv2d): Ninth convolutional layer.
+        conv10 (nn.Conv2d): Tenth convolutional layer.
+        conv11 (nn.Conv2d): Eleventh convolutional layer.
+        conv12 (nn.Conv2d): Twelfth convolutional layer.
+        fc1 (nn.Linear): First fully connected layer.
+        fc2 (nn.Linear): Second fully connected layer.
+        maxpool (nn.MaxPool2d): Max pooling layer.
+        avgpool (nn.AvgPool2d): Average pooling layer.
+        dropout (nn.Dropout): Dropout layer.
+        relu (nn.ReLU): ReLU activation function.
+        softmax (nn.Softmax): Softmax activation function.
+    """
+
+    def __init__(self, num_classes=10):
+        super(ResNet, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3)
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=192, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=192, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=256, out_channels=480, kernel_size=3, stride=1, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=480, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv6 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv7 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv8 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv9 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv10 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv11 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv12 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.fc1 = nn.Linear(512, 4096)
+        self.fc2 = nn.Linear(4096, num_classes)
+        self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.avgpool = nn.AvgPool2d(kernel_size=7, stride=1)
+        self.dropout = nn.Dropout(0.5)
+        self.relu = nn.ReLU()
+        self.softmax = nn.Softmax()
+
+
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        x = self.maxpool(x)
+        x = self.relu(self.conv2(x))
+        x = self.maxpool(x)
+        x = self.relu(self.conv3(x))
+        x = self.relu(self.conv4(x))
+        x = self.relu(self.conv5(x))
+        x = self.maxpool(x)
+        x = self.relu(self.conv6(x))
+        x = self.relu(self.conv7(x))
+        x = self.relu(self.conv8(x))
+        x = self.maxpool(x)
+        x = self.relu(self.conv9(x))
+        x = self.relu(self.conv10(x))
+        x = self.relu(self.conv11(x))
+        x = self.maxpool(x)
+        x = self.relu(self.conv12(x))
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        x = self.dropout(x)
+        x = self.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        return x
+    
+    
+class ChannelBoastedCNN(nn.Module):
+    """
+    Channel Boasted CNN model implementation.
+
+    Args:
+        num_classes (int): Number of output classes. Default is 10.
+
+    Attributes:
+        conv1 (nn.Conv2d): First convolutional layer.
+        conv2 (nn.Conv2d): Second convolutional layer.
+        conv3 (nn.Conv2d): Third convolutional layer.
+        conv4 (nn.Conv2d): Fourth convolutional layer.
+        conv5 (nn.Conv2d): Fifth convolutional layer.
+        conv6 (nn.Conv2d): Sixth convolutional layer.
+        conv7 (nn.Conv2d): Seventh convolutional layer.
+        conv8 (nn.Conv2d): Eighth convolutional layer.
+        conv9 (nn.Conv2d): Ninth convolutional layer.
+        conv10 (nn.Conv2d): Tenth convolutional layer.
+        conv11 (nn.Conv2d): Eleventh convolutional layer.
+        conv12 (nn.Conv2d): Twelfth convolutional layer.
+        fc1 (nn.Linear): First fully connected layer.
+        fc2 (nn.Linear): Second fully connected layer.
+        maxpool (nn.MaxPool2d): Max pooling layer.
+        avgpool (nn.AvgPool2d): Average pooling layer.
+        dropout (nn.Dropout): Dropout layer.
+        relu (nn.ReLU): ReLU activation function.
+        softmax (nn.Softmax): Softmax activation function.
+    """
+
+    def __init__(self, num_classes=10):
+        super(ChannelBoastedCNN, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3)
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=192, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=192, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=256, out_channels=480, kernel_size=3, stride=1, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=480, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv6 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+
