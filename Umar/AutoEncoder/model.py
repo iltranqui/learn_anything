@@ -6,6 +6,15 @@ from modules import *
 
 
 class DiffusionModel(pl.LightningModule):
+    """
+    A PyTorch Lightning module representing the Diffusion Model.
+
+    Args:
+        in_size (int): The input size of the model.
+        t_range (int): The range of time steps.
+        img_depth (int): The number of channels in the input images.
+    """
+
     def __init__(self, in_size, t_range, img_depth):
         super().__init__()
         self.beta_small = 1e-4
@@ -13,25 +22,69 @@ class DiffusionModel(pl.LightningModule):
         self.t_range = t_range
         self.in_size = in_size
 
-        self.unet = Unet(dim = 64, dim_mults = (1, 2, 4, 8), channels=img_depth)
+        self.unet = Unet(dim=64, dim_mults=(1, 2, 4, 8), channels=img_depth)
 
     def forward(self, x, t):
+        """
+        Forward pass of the Diffusion Model.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+            t (torch.Tensor): The time step tensor.
+
+        Returns:
+            torch.Tensor: The output tensor.
+        """
         return self.unet(x, t)
 
     def beta(self, t):
+        """
+        Calculate the beta value based on the given time step.
+
+        Args:
+            t (int): The time step.
+
+        Returns:
+            float: The beta value.
+        """
         # Just a simple linear interpolation between beta_small and beta_large based on t
         return self.beta_small + (t / self.t_range) * (self.beta_large - self.beta_small)
 
     def alpha(self, t):
+        """
+        Calculate the alpha value based on the given time step.
+
+        Args:
+            t (int): The time step.
+
+        Returns:
+            float: The alpha value.
+        """
         return 1 - self.beta(t)
 
     def alpha_bar(self, t):
+        """
+        Calculate the product of alphas from 0 to t.
+
+        Args:
+            t (int): The time step.
+
+        Returns:
+            float: The alpha bar value.
+        """
         # Product of alphas from 0 to t
         return math.prod([self.alpha(j) for j in range(t)])
 
     def get_loss(self, batch, batch_idx):
         """
-        Corresponds to Algorithm 1 from (Ho et al., 2020).
+        Calculate the loss for the given batch.
+
+        Args:
+            batch (torch.Tensor): The input batch.
+            batch_idx (int): The index of the batch.
+
+        Returns:
+            torch.Tensor: The loss value.
         """
         # Get a random time step for each image in the batch
         ts = torch.randint(0, self.t_range, [batch.shape[0]], device=self.device)
@@ -54,7 +107,14 @@ class DiffusionModel(pl.LightningModule):
 
     def denoise_sample(self, x, t):
         """
-        Corresponds to the inner loop of Algorithm 2 from (Ho et al., 2020).
+        Perform the denoising step for the given input and time step.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+            t (int): The time step.
+
+        Returns:
+            torch.Tensor: The denoised tensor.
         """
         with torch.no_grad():
             if t > 1:
@@ -71,15 +131,38 @@ class DiffusionModel(pl.LightningModule):
             return x
 
     def training_step(self, batch, batch_idx):
+        """
+        Training step for the Diffusion Model.
+
+        Args:
+            batch (torch.Tensor): The input batch.
+            batch_idx (int): The index of the batch.
+
+        Returns:
+            torch.Tensor: The loss value.
+        """
         loss = self.get_loss(batch, batch_idx)
         self.log("train/loss", loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
+        """
+        Validation step for the Diffusion Model.
+
+        Args:
+            batch (torch.Tensor): The input batch.
+            batch_idx (int): The index of the batch.
+        """
         loss = self.get_loss(batch, batch_idx)
         self.log("val/loss", loss)
         return
 
     def configure_optimizers(self):
+        """
+        Configure the optimizer for the Diffusion Model.
+
+        Returns:
+            torch.optim.Optimizer: The optimizer.
+        """
         optimizer = torch.optim.Adam(self.parameters(), lr=2e-4)
         return optimizer
