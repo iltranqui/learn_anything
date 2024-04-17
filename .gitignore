@@ -8,3 +8,5 @@ city.jpg
 Jeep.jpg
 jeepbig.jpg
 sample.gif
+**/*.pyc
+**/__pycache__

@@ -12,7 +12,7 @@ class DiffusionModel(pl.LightningModule):
     Args:
         in_size (int): The input size of the model.
         t_range (int): The range of time steps.
-        img_depth (int): The number of channels in the input images.
+        img_depth (int): The number of channels in the input images. -> usually 3 
     """
 
     def __init__(self, in_size, t_range, img_depth):
