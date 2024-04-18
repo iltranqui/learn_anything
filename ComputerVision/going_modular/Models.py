@@ -315,6 +315,7 @@ class VGG19(nn.Module):
 class AlexNet(nn.Module):
     """
     AlexNet model implementation.
+    It works ! -> Training
 
     Args:
         num_classes (int): Number of output classes. Default is 10.
@@ -370,16 +371,31 @@ class AlexNet(nn.Module):
         )
 
         # Fully connected layers: input (256 * 6 * 6), output (num_classes)
-        self.fully_connected = nn.Sequential(
-            nn.Dropout(0.5),
-            nn.Linear(in_features=256 * 6 * 6, out_features=4096),
-            nn.ReLU(),
+        self.fc = nn.Sequential(
+                    nn.Dropout(0.5),
+                    nn.Linear(in_features=256*5*5, out_features=4096),
+                    nn.ReLU())
+        
+        self.fc1 = nn.Sequential(
             nn.Dropout(0.5),
             nn.Linear(in_features=4096, out_features=4096),
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(in_features=4096, out_features=num_classes)
-        )
+            nn.ReLU())
+        
+        self.fc2= nn.Sequential(
+            nn.Linear(in_features=4096, out_features=num_classes))
+
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.conv2(out)
+        out = self.conv3(out)
+        out = self.conv4(out)
+        out = self.conv5(out)
+        out = out.reshape(out.size(0), -1)
+        out = self.fc(out)
+        out = self.fc1(out)
+        out = self.fc2(out)
+        return out
+
     
 class SegNet(nn.Module):
     """Some Information about MyModule"""
