@@ -2,9 +2,13 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision import datasets
 from torchvision import transforms
 from torch.utils.data.sampler import SubsetRandomSampler
+from torch import Tensor
+from typing import Any, Callable, List, Optional, Tuple
+
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -617,8 +621,6 @@ class SegNet(nn.Module):
         print("Training complete. Saving checkpoint...")
         Train.save_checkpoint({'epoch': epoch, 'state_dict': model.state_dict(), 'optimizer' : optimizer.state_dict()}, path)
 
-
-from torch import Torch
 class GoogleNet(nn.Module):
     """
     GoogleNet model implementation.
@@ -650,31 +652,32 @@ class GoogleNet(nn.Module):
 
     def __init__(self, num_classes: int =10,  aux_logits: bool = True, transform_input: bool = False, dropout: float = 0.2, dropout_aux: float = 0.7):
         super(GoogleNet, self).__init__()
-        self.transform_input = transform_input
 
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3)
+        #self.transform_input = transform_input
+
+        self.conv1 = BasicConv2d(3, 64, kernel_size=7, stride=2, padding=3)
         self.maxpool1 = nn.MaxPool2d(3, stride=2, ceil_mode=True)
-        self.conv2 = nn.Conv2d(64, 64, kernel_size=1)
-        self.conv3 = nn.Conv2d(64, 192, kernel_size=3, padding=1)
-        self.maxpool2 = nn.MaxPool2d(3, stride=2, ceil_mode=True)
+        self.conv2 = BasicConv2d(64, 64, kernel_size=1)
+        self.conv3 = BasicConv2d(64, 192, kernel_size=3, padding=1)
+        self.maxpool2 = nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True)
 
-        self.inception3a = nn.Inception(192, 64, 96, 128, 16, 32, 32)
-        self.inception3b = nn.Inception(256, 128, 128, 192, 32, 96, 64)
-        self.maxpool3 = nn.MaxPool2d(3, stride=2, ceil_mode=True)
+        self.inception3a = Inception(in_channels=192, ch1x1=64, ch3x3red=96, ch3x3=128, ch5x5red=16, ch5x5=32, pool_proj=32)
+        self.inception3b = Inception(in_channels=256, ch1x1=128, ch3x3red=128, ch3x3=192, ch5x5red=32, ch5x5=96, pool_proj=64)
+        self.maxpool3 = nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True)
 
-        self.inception4a = nn.Inception(480, 192, 96, 208, 16, 48, 64)
-        self.inception4b = nn.Inception(512, 160, 112, 224, 24, 64, 64)
-        self.inception4c = nn.Inception(512, 128, 128, 256, 24, 64, 64)
-        self.inception4d = nn.Inception(512, 112, 144, 288, 32, 64, 64)
-        self.inception4e = nn.Inception(528, 256, 160, 320, 32, 128, 128)
-        self.maxpool4 = nn.MaxPool2d(2, stride=2, ceil_mode=True)
+        self.inception4a = Inception(480, 192, 96, 208, 16, 48, 64)
+        self.inception4b = Inception(512, 160, 112, 224, 24, 64, 64)
+        self.inception4c = Inception(512, 128, 128, 256, 24, 64, 64)
+        self.inception4d = Inception(512, 112, 144, 288, 32, 64, 64)
+        self.inception4e = Inception(528, 256, 160, 320, 32, 128, 128)
+        self.maxpool4 = nn.MaxPool2d(kernel_size=2, stride=2, ceil_mode=True)
 
-        self.inception5a = nn.Inception(832, 256, 160, 320, 32, 128, 128)
-        self.inception5b = nn.Inception(832, 384, 192, 384, 48, 128, 128)
+        self.inception5a = Inception(832, 256, 160, 320, 32, 128, 128)
+        self.inception5b = Inception(832, 384, 192, 384, 48, 128, 128)
 
         if aux_logits:
-            self.aux1 = nn.InceptionAux(512, num_classes, dropout=dropout_aux)
-            self.aux2 = nn.InceptionAux(528, num_classes, dropout=dropout_aux)
+            self.aux1 = InceptionAux(in_channels=512, num_classes=num_classes, dropout=dropout_aux)
+            self.aux2 = InceptionAux(in_channels=528, num_classes=num_classes, dropout=dropout_aux)
         else:
             self.aux1 = None  # type: ignore[assignment]
             self.aux2 = None  # type: ignore[assignment]
@@ -747,29 +750,41 @@ class GoogleNet(nn.Module):
         return x
 
 class Inception(nn.Module):
+    """
+    An Inception Module is an image model block that aims to approximate an optimal local sparse structure in a CNN.
+    Put simply, it allows for us to use multiple types of filter size, instead of being restricted to a single filter size, in a single image block, which we then concatenate and pass onto the next layer.
+
+    Args:
+        nn (_type_): _description_
+    """
     def __init__(
         self,
-        in_channels: int,
-        ch1x1: int,
-        ch3x3red: int,
-        ch3x3: int,
-        ch5x5red: int,
-        ch5x5: int,
+        in_channels: int,  # channels in input
+        ch1x1: int, # the number of filers for conv1x1
+        ch3x3red: int, # the number of filters for conv3x3
+        ch3x3: int, # the number of filters for 
+        ch5x5red: int, # the number of filters for conv5x5
+        ch5x5: int, # the number of filters for conv5x5
         pool_proj: int,
         conv_block: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
+        
         super().__init__()
-        if conv_block is None:
+        if conv_block is None:  # making sure that the BasicOnc 2 block is defined
             conv_block = BasicConv2d
+
+        # Convolution Block with 1x1 Kernel Size 
         self.branch1 = conv_block(in_channels, ch1x1, kernel_size=1)
 
+
         self.branch2 = nn.Sequential(
-            conv_block(in_channels, ch3x3red, kernel_size=1), conv_block(ch3x3red, ch3x3, kernel_size=3, padding=1)
+            conv_block(in_channels, ch3x3red, kernel_size=1),  # 1st passing a convolution layer with 1 size kernel
+            conv_block(ch3x3red, ch3x3, kernel_size=3, padding=1)  #2nd passing the 2nd convolution layer with 3 size kernel
         )
 
-        self.branch3 = nn.Sequential(
+        self.branch3 = nn.Sequential( 
             conv_block(in_channels, ch5x5red, kernel_size=1),
-            # Here, kernel_size=3 instead of kernel_size=5 is a known bug.
+            # Here, kernel_size=3 instead of kernel_size=5 is a known bug.  -> so let's just leave it let's say
             # Please see https://github.com/pytorch/vision/issues/906 for details.
             conv_block(ch5x5red, ch5x5, kernel_size=3, padding=1),
         )
@@ -790,31 +805,40 @@ class Inception(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         outputs = self._forward(x)
+        # Torch.cat -> you are unifiying the outputs of all the different branches
         return torch.cat(outputs, 1)
 
 
 class InceptionAux(nn.Module):
-    def __init__(
-        self,
-        in_channels: int,
-        num_classes: int,
+    """
+    An auxiliary classifier is a classification block that stems from one of the intermediate layers.
+    We take its predictions into account to help the network to propagate gradients through the more recent layers.
+
+    Args:
+        nn (_type_): _description_
+    """
+    def __init__(self, 
+        in_channels: int, # input channels
+        num_classes: int, # Num of classes to classify 
         conv_block: Optional[Callable[..., nn.Module]] = None,
         dropout: float = 0.7,
     ) -> None:
+        
         super().__init__()
         if conv_block is None:
             conv_block = BasicConv2d
-        self.conv = conv_block(in_channels, 128, kernel_size=1)
+        self.conv1x1 = conv_block(in_channels=in_channels, out_channels=128, kernel_size=1)
 
         self.fc1 = nn.Linear(2048, 1024)
         self.fc2 = nn.Linear(1024, num_classes)
+
         self.dropout = nn.Dropout(p=dropout)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def _forward(self, x: Tensor) -> Tensor:
         # aux1: N x 512 x 14 x 14, aux2: N x 528 x 14 x 14
         x = F.adaptive_avg_pool2d(x, (4, 4))
         # aux1: N x 512 x 4 x 4, aux2: N x 528 x 4 x 4
-        x = self.conv(x)
+        x = self.conv1x1(x)
         # N x 128 x 4 x 4
         x = torch.flatten(x, 1)
         # N x 2048
@@ -824,11 +848,19 @@ class InceptionAux(nn.Module):
         # N x 1024
         x = self.fc2(x)
         # N x 1000 (num_classes)
-
         return x
+    
+    def forward(self, x: Tensor) -> Tensor:
+        outputs = self._forward(x)
+        return torch.cat(outputs, 1)
 
 
 class BasicConv2d(nn.Module):
+    """"
+    OK, correct ! 
+    Convolution Block followed by a Normalization Layer and then simply followed by a  Relu Activation function
+    
+    """
     def __init__(self, in_channels: int, out_channels: int, **kwargs: Any) -> None:
         super().__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, bias=False, **kwargs)
@@ -842,6 +874,7 @@ class BasicConv2d(nn.Module):
 class ResNet(nn.Module):
     """
     ResNet model implementation.
+    Still to implement
 
     Args:
         num_classes (int): Number of output classes. Default is 10.
