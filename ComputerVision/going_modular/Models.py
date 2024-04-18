@@ -739,7 +739,7 @@ class GoogleNet(nn.Module):
         x = self.dropout(x)
         x = self.fc(x)
         # N x 1000 (num_classes)
-        return x, aux2, aux1
+        return torch.cat([x, aux2, aux1], dim=1)
     
     def _transform_input(self, x: Tensor) -> Tensor:
         if self.transform_input:
@@ -794,19 +794,14 @@ class Inception(nn.Module):
             conv_block(in_channels, pool_proj, kernel_size=1),
         )
 
-    def _forward(self, x: Tensor) -> List[Tensor]:
+    def forward(self, x: Tensor) -> Tensor:
         branch1 = self.branch1(x)
         branch2 = self.branch2(x)
         branch3 = self.branch3(x)
         branch4 = self.branch4(x)
 
         outputs = [branch1, branch2, branch3, branch4]
-        return outputs
-
-    def forward(self, x: Tensor) -> Tensor:
-        outputs = self._forward(x)
-        # Torch.cat -> you are unifiying the outputs of all the different branches
-        return torch.cat(outputs, 1)
+        return torch.cat([branch1, branch2, branch3, branch4], dim=1)
 
 
 class InceptionAux(nn.Module):
@@ -829,12 +824,12 @@ class InceptionAux(nn.Module):
             conv_block = BasicConv2d
         self.conv1x1 = conv_block(in_channels=in_channels, out_channels=128, kernel_size=1)
 
-        self.fc1 = nn.Linear(2048, 1024)
-        self.fc2 = nn.Linear(1024, num_classes)
+        self.fc1 = nn.Linear(in_features=2048, out_features=1024)
+        self.fc2 = nn.Linear(in_features=1024, out_features=num_classes)
 
         self.dropout = nn.Dropout(p=dropout)
 
-    def _forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         # aux1: N x 512 x 14 x 14, aux2: N x 528 x 14 x 14
         x = F.adaptive_avg_pool2d(x, (4, 4))
         # aux1: N x 512 x 4 x 4, aux2: N x 528 x 4 x 4
@@ -848,11 +843,7 @@ class InceptionAux(nn.Module):
         # N x 1024
         x = self.fc2(x)
         # N x 1000 (num_classes)
-        return x
-    
-    def forward(self, x: Tensor) -> Tensor:
-        outputs = self._forward(x)
-        return torch.cat(outputs, 1)
+        return torch.cat([x], dim=1)
 
 
 class BasicConv2d(nn.Module):
