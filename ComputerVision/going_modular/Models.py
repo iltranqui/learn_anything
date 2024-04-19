@@ -739,7 +739,8 @@ class GoogleNet(nn.Module):
         x = self.dropout(x)
         x = self.fc(x)
         # N x 1000 (num_classes)
-        return torch.cat([x, aux2, aux1], dim=1)
+        #return torch.cat([x, aux2, aux1], dim=1)
+        return x, aux2, aux1
     
     def _transform_input(self, x: Tensor) -> Tensor:
         if self.transform_input:
@@ -843,7 +844,8 @@ class InceptionAux(nn.Module):
         # N x 1024
         x = self.fc2(x)
         # N x 1000 (num_classes)
-        return torch.cat([x], dim=1)
+        # return torch.cat([x], dim=1)
+        return x
 
 
 class BasicConv2d(nn.Module):
