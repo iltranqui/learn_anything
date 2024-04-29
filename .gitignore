@@ -10,3 +10,10 @@ jeepbig.jpg
 sample.gif
 **/*.pyc
 **/__pycache__
+Segmentation/data
+Transformers/data
+Python_DataScience/data
+*.Zone.Identifier
+*.pt
+Transformers/SwinUnetArchitecturePytorch.ipynb:Zone.Identifier
+ComputerVision/benchmark/profiler_recipe.ipynb:Zone.Identifier
