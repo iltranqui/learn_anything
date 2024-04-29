@@ -187,6 +187,34 @@ class SegNet(nn.Module):
         print("Training complete. Saving checkpoint...")
         Train.save_checkpoint({'epoch': epoch, 'state_dict': model.state_dict(), 'optimizer' : optimizer.state_dict()}, path)
     """
+class SegNetMini(nn.Module):
+    def __init__(self, classes=10):
+        super(SegNetMini, self).__init__()
+
+        batchNorm_momentum = 0.1   
+
+        self.conv11 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
+        self.bn11 = nn.BatchNorm2d(64, momentum=batchNorm_momentum)
+        self.conv12 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.bn12 = nn.BatchNorm2d(64, momentum=batchNorm_momentum)
+
+        self.conv12d = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.bn12d = nn.BatchNorm2d(64, momentum=batchNorm_momentum)
+        self.conv11d = nn.Conv2d(64, classes, kernel_size=3, padding=1)
+
+    def forward(self, x):
+        # Stage 1
+        x11 = F.relu(self.bn11(self.conv11(x)))
+        x12 = F.relu(self.bn12(self.conv12(x11)))
+        x1_size = x12.size()
+        x1p, id1 = F.max_pool2d(x12, kernel_size=2, stride=2, return_indices=True)
+
+        # Stage 1d
+        x1d = F.max_unpool2d(x1p, id1, kernel_size=2, stride=2, output_size=x1_size)
+        x12d = F.relu(self.bn12d(self.conv12d(x1d)))
+        x11d = self.conv11d(x12d)
+
+        return x11d
 
 def main():
     x = torch.rand(1,3,224,224) # -> it is tensor
