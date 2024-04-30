@@ -2,9 +2,11 @@ import torch
 import torch.nn as nn
 import math
 
+# Layers of the Transformers 
+
 class InputEmbeddings(nn.Module):
     
-    # transform a word into a vector of size 512 -> each word
+    # transform a word into a vector of size 512 -> each word is converted into a int of 1 byte basically 
     def __init__(self, d_model: int, vocab_size: int):
         super().__init__()
         self.d_module = d_model
@@ -45,7 +47,28 @@ class PositionEncoding(nn.Module):
     
 
 class LayerNormalization(nn.Module):
+    # For every item in the batch, I have a mean eps and variance 
+    # For numerical stablility we don't want numbers who are huge or small, so between  0 and 1 
 
-    def __init__(self, name, age):
-        self.name = name
-        self.age = age
+    def __init__(self, eps: float = 10**-6 ):
+        super().__init__()
+        self.eps = eps
+        self.alpha = nn.Parameter(torch.ones(1))  # This makes the parameter learnable  -> the gamma in the video | the multiplicative componet 
+        self.bias = nn.Parameter(torch.ones(1))   # the additive component 
+
+    def forward(self, x):
+        mean = x.mean(dim = -1, keepdim=True)
+        std = x.std(dim = -1, keepdim=True)
+        return self.alpha * (x - mean) / (std + self.eps) + self.bias    
+    
+
+class FeedForwardBlock(nn.Module):
+    def __init__(self, d_model: int, d_ff: int, dropout: float):
+        super().__init__()
+        self.linear_1 = nn.Linear(d_model,d_ff) # W1 and B1 
+        self.dropout = nn.Dropout(dropout)
+        self.linear_2 = nn.Linear(d_ff,d_model) # W2 and B2
+
+    def forward(self, x):
+        # (Batch, Seq_Len, d_model ) --> (Batch, Seq_Len, d_ff) -->  ( Batch, Seq_len, d_model)
+        return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
