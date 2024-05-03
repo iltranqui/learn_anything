@@ -132,6 +132,19 @@ class SegNet(nn.Module):
         x11d = self.conv11d(x12d)
 
         return x11d
+    
+    def postprocessing(self, x, classes=10):
+        """
+        The raw SegNet outputs a final tensor of [batch,classes,height,width] of elements where [k,0,0] is a value to determine the probability that the pixel in [0,0] belongs to class K 
+        1st: use the Softmak function to transform all elements along dim=1 so that along [batch,k,:,:] all the elements are probability with sum 1
+        2nd: argmax function return the K class to which the softmax function provides a better chance to be, thus obtaining
+        
+        Output: a [batch,1,height,width] Mask with values from (0,classes)
+        """
+
+        x = torch.nn.functional.softmax(x,dim=1)
+        #x = torch.nn.functional.one_hot(torch.argmax(x, dim=1,keepdim=True)).permute(-1,0)
+        return x.to(torch.float32)
 
 
 
@@ -215,6 +228,19 @@ class SegNetMini(nn.Module):
         x11d = self.conv11d(x12d)
 
         return x11d
+    
+    def postprocessing(self, x, classes=10):
+        """
+        The raw SegNet outputs a final tensor of [batch,classes,height,width] of elements where [k,0,0] is a value to determine the probability that the pixel in [0,0] belongs to class K 
+        1st: use the Softmak function to transform all elements along dim=1 so that along [batch,k,:,:] all the elements are probability with sum 1
+        2nd: argmax function return the K class to which the softmax function provides a better chance to be, thus obtaining
+        
+        Output: a [batch,1,height,width] Mask with values from (0,classes)
+        """
+
+        x = torch.nn.functional.softmax(x,dim=1)
+        x = torch.argmax(x, dim=1,keepdim=True)
+        return x.to(torch.float32)
 
 def main():
     x = torch.rand(1,3,224,224) # -> it is tensor
