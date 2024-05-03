@@ -2,6 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 import torch
+import math
+
+from matplotlib.colors import ListedColormap
+from matplotlib.cm import hsv
 
 def generate_binary_masks(image):
     """
@@ -79,13 +83,13 @@ def plot_masks(tensor):
 
     plt.show()
 
-def plot_combined_masks(tensor):
+def plot_combined_masks(tensor, show_plot = False):
     """
     This function plots combined masks with different colors.
 
     Args:
       tensor (numpy.ndarray or torch.Tensor): The input tensor containing binary masks.
-
+      show_plot (Boolean): show the plot within the function or not
     Returns:
       None
 
@@ -107,9 +111,9 @@ def plot_combined_masks(tensor):
 
     # Create an empty image
     combined_image = np.zeros((3, tensor.shape[1], tensor.shape[2]))
-    print(combined_image.shape)
-    print(tensor.shape)
-    print(cmap(1)[:3])
+    #print(combined_image.shape)
+    #print(tensor.shape)
+    #print(cmap(1)[:3])
     output = np.zeros((3, tensor.shape[1], tensor.shape[2]))
     # Add each mask to the image with a different color
 
@@ -130,18 +134,14 @@ def plot_combined_masks(tensor):
 
     # Plot the combined image
     combined_image = combined_image.transpose(1,2,0)
-    print(combined_image.shape)
-    plt.imshow(combined_image)
-    plt.axis('off')
-    plt.show()
+    if show_plot == True:
+    #print(combined_image.shape)
+        plt.imshow(combined_image)
+        plt.axis('off')
+        plt.show()
+    return torch.tensor(combined_image, dtype=torch.float32)
 
-plot_combined_masks(binary_images)
 
-import math
-
-import numpy as np
-from matplotlib.colors import ListedColormap
-from matplotlib.cm import hsv
 
 
 def generate_colormap(number_of_distinct_colors: int = 80):
@@ -159,7 +159,8 @@ def generate_colormap(number_of_distinct_colors: int = 80):
 
     Examples::
         >>> colormap = generate_colormap(100)
-    """
+    """    
+
     if number_of_distinct_colors == 0:
         number_of_distinct_colors = 80
 
