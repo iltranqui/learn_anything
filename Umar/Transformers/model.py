@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import math
 
+# dataset: opus_books https://huggingface.co/datasets/Helsinki-NLP/opus_books
+
 # Layers of the Transformers 
 
 class InputEmbeddings(nn.Module):
@@ -153,7 +155,7 @@ class ResidualConnection(nn.Module):
 # Now defining the model itself and combining all the layers
 ################################
 
-class EncoderLayer(nn.Module):
+class EncoderBlock(nn.Module):
     def __init__(self, self_attention_block: MultiHeadAttention, feed_forward_block: FeedForwardBlock, dropout: float):
         super().__init__()
         self.self_attention_block = self_attention_block
@@ -195,7 +197,7 @@ class DecoderBlock(nn.Module):
         self.feed_forward_block = feed_forward_block
 
         # 3 residual connections
-        self.residual_connection = nn.ModuleList([ResidualConnection(dropout) for _ in range(3)])
+        self.residual_connection = nn.Module([ResidualConnection(dropout) for _ in range(3)])
 
     # decoder forward method is similar to the encoder forward method
     def forward(self, x, encoder_output, src_mask, tgt_mask):
@@ -232,8 +234,12 @@ class ProjectionLayer(nn.Module):
     
 # The transformer is the combination of the encoder, decoder and the projection layer
 
+
+# #### ####
+# Placing all the layers together
+# #### ####
 class Transformer(nn.Module):
-    def __init__(self, encoder: Encoder, decoder: Decoder, src_embed: InputEmbeddings, tgt_embed: InputEmbeddings, tgt_pos: PositionEncoding, projection_layer: ProjectionLayer):
+    def __init__(self, encoder: Encoder, decoder: Decoder, src_embed: InputEmbeddings, tgt_embed: InputEmbeddings, src_pos: PositionEncoding, tgt_pos: PositionEncoding, projection_layer: ProjectionLayer):
         super().__init__()
         self.encoder = encoder
         self.decoder = decoder
@@ -282,5 +288,39 @@ def build_transform(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, 
     src_pos = PositionEncoding(d_model, src_seq_len, dropout)
     tgt_pos = PositionEncoding(d_model, tgt_seq_len, dropout)
 
-    # Create the encoder and decoder blocks
+    # Create the encoder blocks 
+    encoder_blocks = []
+    for _ in range(N):
+        encorder_self_attention_block = MultiHeadAttention(d_model, h, dropout)
+        feed_forward_block = FeedForwardBlock(d_model=d_model, d_ff=d_ff, dropout=dropout)
+        encoder_block = EncoderBlock(encorder_self_attention_block, feed_forward_block, dropout)
+        encoder_blocks.append(encoder_block)
+
+    # decoder blocks
+    decoder_blocks = []
+    for _ in range(N):
+        decoder_self_attention_block = MultiHeadAttention(d_model, h, dropout)
+        decoder_cross_attention_block = MultiHeadAttention(d_model, h, dropout)
+        feed_forward_block = FeedForwardBlock(d_model=d_model, d_ff=d_ff, dropout=dropout)
+        decoder_block = DecoderBlock(decoder_self_attention_block, decoder_cross_attention_block, feed_forward_block, dropout)
+        decoder_blocks.append(decoder_block) 
     
+    # Create the Encoder 
+    encoder = Encoder(nn.ModuleList(encoder_blocks))
+    decoder = Decoder(nn.ModuleList(decoder_blocks))
+
+    # Create the projection layer
+    projection_layer = ProjectionLayer(d_model, tgt_vocab_size)
+
+    # Create the transformer
+    transformer = Transformer(encoder, decoder, src_embed, tgt_embed, src_pos, tgt_pos, projection_layer)
+
+    # Now intialize the weights/parameters
+    # a slow initialization is used to avoid the exploding gradients or a slow start
+    for p in transformer.parameters():
+        if p.dim() > 1:
+            nn.init.xavier_uniform_(p)
+
+    return transformer
+
+
