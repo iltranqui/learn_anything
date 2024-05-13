@@ -27,6 +27,7 @@ class DiffusionModel(pl.LightningModule):
     def forward(self, x, t):
         """
         Forward pass of the Diffusion Model.
+        in this case passing it to the UNET algorithm
 
         Args:
             x (torch.Tensor): The input tensor.
