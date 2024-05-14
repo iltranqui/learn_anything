@@ -40,3 +40,18 @@ These segmentation tasks play crucial roles in computer vision applications, ena
     - Image [batch, 3, height, input]
     - Mask [batch, 1, height, input] → uint8 for id for each class
     - id2label → the number assoicated with each label
+
+
+### Semantic Segmentation Pipeline Design (Input/Output)
+Requirements for the Pipeline in order that future datasets are ready to be used in that specific format 
+
+* Input: 
+    1. Images/Pictures: in RGB [3, height, width] format *.jpg in float32
+    2. Masks: in format [1, heigth, width] format *.png in uint8
+        * Masks are supposed to be without the ground element -> future interations will make sure that the the option of adding a background is also present
+    3. id2josn: For the Segmentation Tasks, there is a necessity to know what each single label in the mask is refering to. 
+
+* Output: 
+    1. Predicted Mask: [1, heigth, width] format tensor.float32
+        * Predict also the transformat to a png file for every single element
+        * Export the Model in ONNX  

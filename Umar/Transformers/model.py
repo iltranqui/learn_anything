@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+import torch.nn as nn   
 import math
 
 # dataset: opus_books https://huggingface.co/datasets/Helsinki-NLP/opus_books
@@ -7,6 +7,7 @@ import math
 # Layers of the Transformers 
 
 class InputEmbeddings(nn.Module):
+    #  Embeddings capture the meaning of words or entities in a vector space.
     
     # transform a word into a vector of size 512 -> each word is converted into a int of 1 byte basically 
     def __init__(self, d_model: int, vocab_size: int):
@@ -20,6 +21,7 @@ class InputEmbeddings(nn.Module):
     
 
 class PositionEncoding(nn.Module):
+    # Encoders transform input data (e.g., text, images) into a latent representation.
     """Some Information about PositionEncoding
     This layers adds to the Input embeddings the information of it's current position in the sentence in the form of a vector of 512 float numbers
     """
@@ -50,7 +52,7 @@ class PositionEncoding(nn.Module):
 
 class LayerNormalization(nn.Module):
     # For every item in the batch, I have a mean eps and variance 
-    # For numerical stablility we don't want numbers who are huge or small, so between  0 and 1 
+    # For numerical stability we don't want numbers who are huge or small, so between  0 and 1 
 
     def __init__(self, eps: float = 10**-6 ):
         super().__init__()
