@@ -138,7 +138,7 @@ class SegNet(nn.Module):
         The raw SegNet outputs a final tensor of [batch,classes,height,width] of elements where [k,0,0] is a value to determine the probability that the pixel in [0,0] belongs to class K 
         1st: use the Softmak function to transform all elements along dim=1 so that along [batch,k,:,:] all the elements are probability with sum 1
         2nd: argmax function return the K class to which the softmax function provides a better chance to be, thus obtaining
-        
+        Hello
         Output: a [batch,1,height,width] Mask with values from (0,classes)
         """
 

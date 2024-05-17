@@ -17,3 +17,9 @@ Python_DataScience/data
 *.pt
 Transformers/SwinUnetArchitecturePytorch.ipynb:Zone.Identifier
 ComputerVision/benchmark/profiler_recipe.ipynb:Zone.Identifier
+
+lightning/logs
+lightning/MNIST
+lightning/lightning_logs
+mlflow_tutorials/MNIST
+data/
