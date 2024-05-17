@@ -47,12 +47,12 @@ class BilingualDataset(Dataset):
             raise ValueError('Sentence is too long')
         
 
-        # Build the 2 tensor for encoder input and decooder input, but also for the label 
+        # Build the 2 tensor for encoder input and decoder input, but also for the label 
             # 1st: input to decoder, 2nd: input to decoder, 3rd: output of the decoder
         
         encoder_input = torch.cat([
             self.sos_token,                                                                         # Start of Sentence Token 
-            torch.Tensor(enc_input_tokens, dtype=torch.int64)                                       # Words as Tokens 
+            torch.Tensor(enc_input_tokens, dtype=torch.int64),                                     # Words as Tokens 
             self.eos_token,                                                                         # ENd of Sentence Token 
             torch.Tensor([self.pad_token] * enc_num_padding_tokens, dtype=torch.int64)              # Number of padding required for the sentence, they will be ignored from the transformer
         ])

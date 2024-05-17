@@ -175,7 +175,7 @@ class EncoderBlock(nn.Module):
 # This is just one encorder block, but we can have multiple encorder blocks
 
 class Encoder(nn.Module):
-    def __init__(self, layers: nn.Modulelist) -> None:
+    def __init__(self, layers: nn.ModuleList) -> None:
         super().__init__()
         self.layers = layers
         self.norm = LayerNormalization()
@@ -270,7 +270,7 @@ class Transformer(nn.Module):
 
 # in the example of the transformer, we are using it as a translation model, but it can't be used for other tasks as well
 # Example: emebdding all the words in 512 vector length
-def build_transform(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int, d_model: int = 512, N: int = 6, dropout: float = 0.1, d_ff: int = 2048, h: int = 8):
+def build_transform(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int = 512, N: int = 6, dropout: float = 0.1, d_ff: int = 2048, h: int = 8):
     
     # src_vocab_size: the size of the source vocabulary
     # tgt_vocab_size: the size of the target vocabulary
