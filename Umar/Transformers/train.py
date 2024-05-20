@@ -137,7 +137,7 @@ def train_model(config):
     Path(config['model_folder']).mkdir(parents=True, exist_ok=True)
 
     train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt = get_dataset(config)
-    model = get_model(config, tokenizer_src.get_vocab_size(), tokenizer_tgt.get_vocab_size().to(device))
+    model = get_model(config, tokenizer_src.get_vocab_size(), tokenizer_tgt.get_vocab_size()).to(device)
 
     # Tensorboard 
     writer = SummaryWriter(config['experiment_name'])
@@ -145,7 +145,7 @@ def train_model(config):
     optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'], eps=1e-9)
                                  
     # in case the model crashes during training 
-    inital_epoch = 0
+    initial_epoch = 0
     global_step = 0
     if config['preload']:
         model_filename = get_weigths_file_path(config, config['preload'])
