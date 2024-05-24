@@ -76,7 +76,7 @@ def get_or_build_tokenizer(config, ds, lang):
 def get_dataset(config):
     # Config: config file
 
-    dataset = load_dataset("Helsinki-NLP/opus_books", f'{config["lang_src"]}-{config["lang_tgt"]}', split="train", )   
+    dataset = load_dataset(f"{config['datasource']}", f'{config["lang_src"]}-{config["lang_tgt"]}', split="train", )   
     # have to check the usage of the above line
     
     # build tokenizers
@@ -84,8 +84,9 @@ def get_dataset(config):
     tokenizer_tgt = get_or_build_tokenizer(config, dataset, config['lang_tgt'])
                                            
     # Keep 90% for training and 10% for validation 
-    train_ds_size = int(0.75 * len(dataset))
-    val_ds_size = int(0.25 * len(dataset))
+    train_ds_size = int(0.9 * len(dataset))
+    #val_ds_size = int(0.1 * len(dataset))  -> SOlve the problem of random_split
+    val_ds_size = len(dataset) - train_ds_size
     print(f"TRAIN LEN: {train_ds_size}")
     print(f"VAL LEN: {val_ds_size}")
     print(f"DATASET LEGNTRH: {len(dataset)}")
@@ -163,14 +164,14 @@ def train_model(config):
         batch_iterator = tqdm(train_dataloader, desc=f"Processing epoch {epoch:02d}")
         for batch in batch_iterator:
         
-            encoder_input = batch['decoder_input'].to(device) #   ( B , Seq_len )
+            encoder_input = batch['encoder_input'].to(device) #   ( B , Seq_len )
             decoder_input = batch['decoder_input'].to(device) # ( b, seq_len)
-            encoder_input = batch['decoder_mask'].to(device) #   ( B , 1, 1, Seq_len )
-            decoder_input = batch['decoder_mask'].to(device) # ( b, 1, Seq_len, seq_len)
+            encoder_mask = batch['encoder_mask'].to(device) #   ( B , 1, 1, Seq_len )
+            decoder_mask = batch['decoder_mask'].to(device) # ( b, 1, Seq_len, seq_len)
 
-            # Run the tensor thorught he transformer 
+            # Run the tensor through he transformer 
             encoder_output = model.encode(encoder_input, encoder_mask)   # ( B, Seq_LEn, d_model)
-            decoder_output = model.decode(encoder_output, encorder_mask, decoder_inout, decoder_mask)  # (B, Seq_Len, d_model)
+            decoder_output = model.decode(encoder_output, encoder_mask, decoder_input, decoder_mask)  # (B, Seq_Len, d_model)
 
             # Projection Output 
             proj_output = model.project(decoder_output) # ( B, Seq_Len)

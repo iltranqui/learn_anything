@@ -61,15 +61,16 @@ class BilingualDataset(Dataset):
             self.sos_token,
             torch.tensor(dec_input_tokens, dtype=torch.int64),
             # ! self.eos_token, -> no eos token  
-            torch.tensor(self.pad_token * dec_num_padding_tokens, dtype=torch.int64)
+            torch.tensor([self.pad_token] * dec_num_padding_tokens, dtype=torch.int64)
         ], dim=0)
 
         label = torch.cat([
             torch.tensor(dec_input_tokens, dtype=torch.int64),
             self.eos_token,
-            torch.tensor(self.pad_token * dec_input_tokens, dtype=torch.int64)
+            torch.tensor([self.pad_token] * dec_num_padding_tokens, dtype=torch.int64)
         ], dim=0)
 
+        # print(f"ENCODER:{encoder_input.size(0)}  DECORDER: {decoder_input.size(0)} SEQ_LEN: {self.seq_len}")
         assert encoder_input.size(0) == self.seq_len
         assert decoder_input.size(0) == self.seq_len
         assert label.size(0) == self.seq_len
@@ -89,5 +90,5 @@ class BilingualDataset(Dataset):
 def casual_mask(size):
     # IN the self attention mask, we have a 2D matrix which a score of attention from each word in the sentence to each word 
     # since we are translating we want to look up only to the words who are before in the sentence and not after, so we will be exlcufing the upper triangle of the matrix
-    mask = torch.triu(torch.ones(1, size, size), diagonal=1).dtype=(torch.int)
+    mask = torch.triu(torch.ones((1, size, size)), diagonal=1).type(torch.int)
     return mask == 0 

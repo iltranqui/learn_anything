@@ -8,22 +8,24 @@ import math
 
 class InputEmbeddings(nn.Module):
     #  Embeddings capture the meaning of words or entities in a vector space.
-    
-    # transform a word into a vector of size 512 -> each word is converted into a int of 1 byte basically 
-    def __init__(self, d_model: int, vocab_size: int):
+    #  Example: [17,1] token becomes -> [17,512] 
+    # transform a word ( or token ) into a vector of size 512 -> each word is converted into a int of 1 byte basically, then expanded into a vector of size 512 
+    def __init__(self, d_model: int, vocab_size: int):   
         super().__init__()
-        self.d_module = d_model
+        self.d_module = d_model  # = 512
         self.vocab_size = vocab_size
         self.embedding = nn.Embedding(vocab_size, d_model)      # -> most of the work is done by the torch here
 
     def forward(self, x):
-        return self.embedding(x) * math.sqrt(self.d_module)
+        return self.embedding(x) * math.sqrt(self.d_module)   # Noramlzing the embeddings with the sqrt ! 
     
 
 class PositionEncoding(nn.Module):
     # Encoders transform input data (e.g., text, images) into a latent representation.
     """Some Information about PositionEncoding
     This layers adds to the Input embeddings the information of it's current position in the sentence in the form of a vector of 512 float numbers
+
+    Adding to [17,512] vector and Position Encoding Vector [17,512] to MEMORIZE THE ORDER OF EACH TOKEN WITHIN THE SENTENCE 
     """
     def __init__(self, d_module: int, seq_len: int, dropout: int):   # dropout to reduce the overfitting
         super(PositionEncoding, self).__init__()
@@ -46,8 +48,11 @@ class PositionEncoding(nn.Module):
 
 
     def forward(self, x):
+        print(f"PE X: {type(x)}")
         x = x + (self.pe[:,:x.shape[1], :]).requires_grad_(False)  # We don't want the NN to learn the position encoding since it is not out goal, so we place the grad to not be learn since the NN learn by applying the gradient and back propagation
-        return self.dropout(x)
+        result = self.dropout(x)    # Dropout is to 
+        print(f"POSITION X: {type(x)}")
+        return result
     
 
 class LayerNormalization(nn.Module):
@@ -61,9 +66,14 @@ class LayerNormalization(nn.Module):
         self.bias = nn.Parameter(torch.ones(features))   # the additive component 
 
     def forward(self, x):
+        #print(f"TYPE X: {type(x)}")
         mean = x.mean(dim = -1, keepdim=True)
         std = x.std(dim = -1, keepdim=True)
-        return self.alpha * (x - mean) / (std + self.eps) + self.bias    
+        result = self.alpha * (x - mean) / (std + self.eps) + self.bias    
+        #print(f"TYPE RESULT: {type(result)}")
+        return result
+        # NON transforma in NONTYPE
+
     
 
 class FeedForwardBlock(nn.Module):
@@ -88,10 +98,11 @@ class MultiHeadAttention(nn.Module):
         self.d_model = d_model  # size of the embedding vector
         self.seq = seq   # length of the sequence
         self.d_k = d_model // seq  
-        self.h = seq   # number of heads
-        assert d_model % h == 0, "d_model is not divisible by h"   # the number of heads should be divisible by the size of the embedding vector
+        self.heads = h   # number of heads
 
-        self.d_k = d_model // h # the size of the key and the value
+        assert d_model % self.heads == 0, "d_model is not divisible by h"   # the number of heads should be divisible by the size of the embedding vector
+
+        self.d_k = d_model // self.heads # the size of the key and the value
         self.w_q = nn.Linear(d_model, d_model)  # W_q weight matrix
         self.w_k = nn.Linear(d_model, d_model)  # W_k weight matrix
         self.w_v = nn.Linear(d_model, d_model)  # W_v weight matrix
@@ -99,41 +110,43 @@ class MultiHeadAttention(nn.Module):
         self.w_o = nn.Linear(d_model, d_model) # W_o weight matrix
         self.dropout = nn.Dropout(dropout)
 
-    @staticmethod # Static method: it means that you can call attention without creating an instance of the class. Ex: MultiHeadAttention.attention()
-    def attention(self, query, key, value, dropout: nn.Dropout):
-        d_k = query.size[-1]  # the size of the key and the value
+    @staticmethod # Static method: it means that you can call attention without creating an instance of the class. Ex: MultiHeadAttention.attention()  -> so these functions don't need the self. key 
+    def attention(query, key, value, mask, dropout: nn.Dropout):
+        d_k = query.shape[-1]  # the size of the key and the value
 
         # attention_scores = torch.matmul(query, key.transpose(-2,-1)) / math.sqrt(d_k)  # (Batch, h, Seq_Len, Seq_Len)
         attention_scores = ( query @ key.transpose(-2,-1) ) / math.sqrt(d_k)  # (Batch, h, Seq_Len, Seq_Len)
         if mask is not None:
+            # Write a very low value (indicating -inf) to the position where mask  = 0
             attention_scores = attention_scores.masked_fill(mask == 0, -1e9)  # This is to avoid looking at the future words in the sentence
-        attention_scores = attention_scores.softmax(attention_scores, dim = -1)  # (Batch, h, Seq_Len, Seq_Len)
+        attention_scores = attention_scores.softmax(dim = -1)  # (Batch, h, Seq_Len, Seq_Len)
         # apply dropout
-        attention_scores = dropout(attention_scores)
+        if dropout is not None:
+            attention_scores = dropout(attention_scores)
         
         return (attention_scores @ value), attention_scores  # (Batch, h, Seq_Len, d_k)
 
     def forward(self, q, v, k, mask = None):
         # Mask is used to avoid looking at the future words in the sentence
         # x has shape (Batch, Seq_Len, d_model)
-        query = self.w_q(q)  # Dimensions: (Batch, Seq_Len, d_model) -> (Batch, Seq_Len, d_model)
-        key = self.w_k(k)    # Dimensions: (Batch, Seq_Len, d_model)  -> (Batch, Seq_Len, d_model)
-        value = self.w_v(v)  # Dimensions: (Batch, Seq_Len, d_model)  -> (Batch, Seq_Len, d_model)
+        query = self.w_q(q)  # Dimensions: (Batch, Seq_Len, d_model) x ( Batch, d_model, d_model ) -> (Batch, Seq_Len, d_model)
+        key = self.w_k(k)    # Dimensions: (Batch, Seq_Len, d_model) x ( Batch, d_model, d_model ) -> (Batch, Seq_Len, d_model)
+        value = self.w_v(v)  # Dimensions: (Batch, Seq_Len, d_model) x ( Batch, d_model, d_model ) -> (Batch, Seq_Len, d_model)
 
         # Split the query, key and value into h heads
         # # (Batch, Seq_Len, h, d_k) -> (Batch, h, Seq_Len, d_k) -> (Batch*h, Seq_Len, d_k)
-        query = query.view(query.shape[0], query.shape[1], self.h, self.d_k).permute(0,2,1,3) 
+        query = query.view(query.shape[0], query.shape[1], self.heads, self.d_k).permute(0,2,1,3) 
 
-        key = key.view(key.shape[0], key.shape[1], self.h, self.d_k).permute(0,2,1,3)
+        key = key.view(key.shape[0], key.shape[1], self.heads, self.d_k).permute(0,2,1,3)
  
-        value = value.view(value.shape[0], value.shape[1], self.h, self.d_k).permute(0,2,1,3)
+        value = value.view(value.shape[0], value.shape[1], self.heads, self.d_k).permute(0,2,1,3)
 
         # Calculate the attention scores via a function
-        self.attention_scores = MultiHeadAttention.attention(query, key, value, self.dropout)   
+        x, self.attention_scores = MultiHeadAttention.attention(query, key, value, mask, self.dropout)   
 
         # Concatenate the heads
         # (Batch, h, Seq_Len, d_k) -> (Batch, Seq_Len, h, d_k) -> (Batch, Seq_Len, d_model)
-        x = x.transpose(1,2).contiguous().view(x.shape[0], x.shape[1], self.d_model)      
+        x = x.transpose(1,2).contiguous().view(x.shape[0], -1, self.heads * self.d_k)      
 
         # multiply by the output weights
         return self.w_o(x)  # (Batch, Seq_Len, d_model)
@@ -149,7 +162,10 @@ class ResidualConnection(nn.Module):
         self.norm = LayerNormalization(features)
 
     def forward(self, x, sublayer):
-        return x + self.dropout(sublayer(self.norm(x)))   #1st apply the normalization, then the sublayer, then the dropout
+        print(f"RESIDCUAL CONNECTION TYPE X: {type(x)}")
+        result = x + self.dropout(sublayer(self.norm(x)))   #1st apply the normalization, then the sublayer, then the dropout
+        print(f"{type(result)}")
+        return result
         # the sum it is because there are elements which are being multiuplying. 
 
 
@@ -173,9 +189,10 @@ class EncoderBlock(nn.Module):
         # 2nd send the X to the feed forward block
         x = self.residual_connection[1](x, self.feed_forward_block)
 
-# This is just one encorder block, but we can have multiple encorder blocks
+# This is just one encoder block, but we can have multiple encoder blocks
 
 class Encoder(nn.Module):
+
     def __init__(self, features: int, layers: nn.ModuleList) -> None:
         super().__init__()
         self.layers = layers
@@ -185,7 +202,6 @@ class Encoder(nn.Module):
         for layer in self.layers:
             x = layer(x, mask)
         return self.norm(x)
-    
 
 
 # ##########################################################
