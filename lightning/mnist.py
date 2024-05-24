@@ -5,6 +5,7 @@ import os
 from dataclasses import dataclass
 from typing import Tuple
 
+import multiprocessing
 import lightning as L
 import pandas as pd
 import seaborn as sn
@@ -17,6 +18,11 @@ from torch.utils.data import DataLoader, random_split
 from torchmetrics import Accuracy
 from torchvision import transforms
 from torchvision.datasets import MNIST
+from models import VGG16_lightning
+from experiment import experiment
+
+from lightning.pytorch.callbacks.early_stopping import EarlyStopping
+
 
 # ------------------- Configuration ------------------- #
 
@@ -55,9 +61,11 @@ class Config:
     data_dir: str = os.environ.get("PATH_DATASETS", ".")
     save_dir: str = "logs/"
     batch_size: int = 256 if torch.cuda.is_available() else 64
-    max_epochs: int = 3
+    max_epochs: int = 100
     accelerator: str = "auto"
     devices: int = 1
+    num_workers: int = multiprocessing.cpu_count()
+    model: str = "experiment"
 
 
 config = Config()
@@ -104,7 +112,9 @@ class MNISTModel(L.LightningModule):
     def __init__(self):
         """Initializes a new instance of the MNISTModel class."""
         super().__init__()
-        self.l1 = torch.nn.Linear(28 * 28, 10)
+        self.l1 = torch.nn.Linear(28 * 28, 128)
+        self.l2 = torch.nn.Linear(128,256)
+        self.l3 = torch.nn.Linear(256,10)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Performs a forward pass through the model.
@@ -120,6 +130,27 @@ class MNISTModel(L.LightningModule):
             >>> x = torch.randn(1, 1, 28, 28)
             >>> output = model(x)
         """
+        batch_size, channels, width, height = x.size()
+
+        # (b, 1, 28, 28) -> (b, 1*28*28)
+        x = x.view(batch_size, -1)
+
+        # layer 1
+        x = self.l1(x)
+        x = torch.relu(x)
+
+        # layer 2
+        x = self.l2(x)
+        x = torch.relu(x)
+
+        # layer 3
+        x = self.l3(x)
+
+        # probability distribution over labels
+        x = torch.log_softmax(x, dim=1)
+
+        return x
+    
         flattened = x.view(x.size(0), -1)
         hidden = self.l1(flattened)
         activated = torch.relu(hidden)
@@ -168,23 +199,26 @@ class MNISTModel(L.LightningModule):
 
 # %%
 # Init our model
-mnist_model = MNISTModel()
+#mnist_model = MNISTModel()
 
 # Init DataLoader from MNIST Dataset
-train_ds = MNIST(config.data_dir, train=True, download=True, transform=transforms.ToTensor())
+#train_ds = MNIST(config.data_dir, train=True, download=True, transform=transforms.ToTensor())
 
 # Create a dataloader
-train_loader = DataLoader(train_ds, batch_size=config.batch_size)
+#train_loader = DataLoader(train_ds, batch_size=config.batch_size, num_workers=config.num_workers)
 
 # Initialize a trainer
+"""
 trainer = L.Trainer(
     accelerator=config.accelerator,
     devices=config.devices,
     max_epochs=config.max_epochs,
+    # num_nodes=config.num_workers,
 )
+"""
 
 # Train the model ⚡
-trainer.fit(mnist_model, train_loader)
+#trainer.fit(mnist_model, train_loader)
 
 # %% [markdown]
 # ## A more complete MNIST Lightning Module Example
@@ -288,17 +322,27 @@ class LitMNIST(L.LightningModule):
             ]
         )
 
-        # Define PyTorch model
-        self.model = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(channels * width * height, hidden_size),
-            nn.ReLU(),
-            nn.Dropout(0.1),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Dropout(0.1),
-            nn.Linear(hidden_size, self.num_classes),
-        )
+        # Other Models
+        # Here other models can be determined and pasted inside 
+
+        if (config.model == 'default'):
+            # Define PyTorch model
+            self.model = nn.Sequential(
+                nn.Flatten(),
+                nn.Linear(channels * width * height, hidden_size),
+                nn.ReLU(),
+                nn.Dropout(0.1),
+                nn.Linear(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.Dropout(0.1),
+                nn.Linear(hidden_size, self.num_classes),
+            )
+        elif (config.model == 'experiment'):
+            self.model = experiment(self.hidden_size, self.num_classes, self.dims)
+            print("Experiment is Running")
+        else:
+            NameError ("Wrong Kind of Module")
+
 
         self.val_accuracy = Accuracy(task="multiclass", num_classes=10)
         self.test_accuracy = Accuracy(task="multiclass", num_classes=10)
@@ -312,6 +356,7 @@ class LitMNIST(L.LightningModule):
         Returns:
             torch.Tensor: The output of the MLP.
         """
+        
         x = self.model(x)
         return F.log_softmax(x, dim=1)
 
@@ -329,6 +374,7 @@ class LitMNIST(L.LightningModule):
         x, y = batch
         logits = self(x)
         loss = F.nll_loss(logits, y)
+        # self.log("train_loss", loss, prog_bar=True)  -> Works, but messes up the displaying of the logs, NOT nevessary during training
         return loss
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_nb: int) -> None:
@@ -371,7 +417,7 @@ class LitMNIST(L.LightningModule):
         Returns:
             torch.optim.Optimizer: The optimizer.
         """
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        optimizer = torch.optim.Adam(params=self.parameters(), lr=self.learning_rate)
 
         return optimizer
 
@@ -407,7 +453,7 @@ class LitMNIST(L.LightningModule):
         Returns:
             DataLoader: The training DataLoader.
         """
-        return DataLoader(self.mnist_train, batch_size=config.batch_size)
+        return DataLoader(self.mnist_train, batch_size=config.batch_size, num_workers=config.num_workers)
 
     def val_dataloader(self) -> DataLoader:
         """Returns a DataLoader for the validation set.
@@ -415,7 +461,7 @@ class LitMNIST(L.LightningModule):
         Returns:
             DataLoader: The validation DataLoader.
         """
-        return DataLoader(self.mnist_val, batch_size=config.batch_size)
+        return DataLoader(self.mnist_val, batch_size=config.batch_size, num_workers=config.num_workers)
 
     def test_dataloader(self) -> DataLoader:
         """Returns a DataLoader for the test set.
@@ -423,12 +469,16 @@ class LitMNIST(L.LightningModule):
         Returns:
             DataLoader: The test DataLoader.
         """
-        return DataLoader(self.mnist_test, batch_size=config.batch_size)
+        return DataLoader(self.mnist_test, batch_size=config.batch_size, num_workers=config.num_workers)
 
 
 # %%
 # Instantiate the LitMNIST model
 model = LitMNIST()
+#model = VGG16_lightning()
+
+# EarlyStopping
+early_stop_callback = EarlyStopping(monitor="val_accuracy", min_delta=0.00, patience=5, verbose=False, mode="max")
 
 # Instantiate a PyTorch Lightning trainer with the specified configuration
 trainer = L.Trainer(
@@ -436,6 +486,8 @@ trainer = L.Trainer(
     devices=config.devices,
     max_epochs=config.max_epochs,
     logger=CSVLogger(save_dir=config.save_dir),
+    callbacks=[early_stop_callback]
+   # profiler=True, -> gives error
 )
 
 # Train the model using the trainer
@@ -450,7 +502,7 @@ trainer.fit(model)
 # test using the best saved checkpoint (conditioned on val_loss).
 
 # %%
-trainer.test(ckpt_path="best")
+# trainer.test(ckpt_path="best")
 
 # %% [markdown]
 # ### Bonus Tip
@@ -475,7 +527,7 @@ del metrics["step"]
 metrics.set_index("epoch", inplace=True)
 
 # Display the first few rows of the metrics table, excluding any columns with all NaN values
-display(metrics.dropna(axis=1, how="all").head())
+display(metrics.dropna(axis=1, how="all").head(50))
 
 # Create a line plot of the training metrics using Seaborn
 sn.relplot(data=metrics, kind="line")
