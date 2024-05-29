@@ -23,3 +23,5 @@ lightning/MNIST
 lightning/lightning_logs
 mlflow_tutorials/MNIST
 data/
+Umar/Transformers/tokenizer_it.json
+Umar/Transformers/tokenizer_en.json
