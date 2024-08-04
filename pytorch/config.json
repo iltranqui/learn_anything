@@ -1,0 +1,10 @@
+{
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "num_epochs": 2,
+    "num_classes": 10,
+    "data_path": "data",
+    "model_name": "simple_cnn_simple",
+    "num_filters": 32,
+    "dropout_rate": 0.5
+}
