@@ -19,3 +19,18 @@ A variational autoencoder is a generative model which generates a new image by a
 ### Forward Process
 
 a vector of betas $\beta$ is sampled from a normal distribution. Each $\beta$ represents the mean and the variance of the noise added at each step. The Forward Process will try to predict the mean and variance of the noise added to the image, in a reverse process. 
+
+
+
+## The Training Process
+
+The Unet is 1st trained with the following inputs: 
+
+* Input: 1st: The original image with some noise added to it 2nd: the parameters of the nouse ( mean and variance ) and 3rd: the prompt associated with the image.
+* Output: The original image without the noise added to it.
+
+The Unet is trained to predict what kind of noise has been added to the image. The model is also **conditioned**: in the sense that it can be trained with all 3 inputs, but also without the prompt or without the image, in order to be able to still work while given only a prompt, or zero prompt and in the image.
+
+Let's say we start from a image with $t=1000$ noise. **Step 1** We train the Unet with the image and the prompt. Then we repear the same process with $t=1000$ but **without** the prompt. we can unite the 2 models into one model that can work with or without the prompt by using the **classifier-free guidance**, like an $\aplha$ from 0 to 1 which decides how much to use one model or the other.  The lower the value, the less the prompt will be used. 
+
+THE MODEL understand the meaning of the prompt via the **CLIP (Constrastive Language-Image Pre Training)** method
