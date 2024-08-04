@@ -26,3 +26,5 @@ data/
 Umar/Transformers/tokenizer_it.json
 Umar/Transformers/tokenizer_en.json
 pytorch/data
+pytorch/mlruns
+pytorch/__pycache__
