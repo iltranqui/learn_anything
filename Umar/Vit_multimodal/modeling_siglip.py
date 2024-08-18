@@ -32,7 +32,58 @@ class SiglipVisualizationConfig:
         self.num_image_tokens = num_image_tokens
 # All the classes below need to extract different parameters from the config class above, which are shared among all the classes
 
+class SiglipMLP(nn.Module):
+    # The MLP is a feedforward network with one hidden layer
+    # You expand the input to a higher-dimensional space, apply a nonlinearity, and project back to the original dimension via and intermediate layer
+    def __init__(self, config: SiglipVisualizationConfig):
+        super().__init__()
+        self.config = config
+        self.fc1 = nn.Linear(config.embed_dim, config.intermediate_size)
+        self.fc2 = nn.Linear(config.intermediate_size, config.embed_dim)
 
+    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, intermediate_size]
+        hidden_states = self.fc1(hidden_states)
+        # Intermediate state: [batch_size, num_patches, intermediate_size] 
+        hidden_states = nn.functional.gelu(hidden_states, approximate='tanh')  # GeLU activation function
+        # [batch_size, num_patches, intermediate_size] -> [batch_size, num_patches, embed_dim]
+        hidden_states = self.fc2(hidden_states)
+
+        return hidden_states
+
+
+class SiglipEncoder(nn.Module):
+    # The encoder is a stack of N layers of transformer layers
+
+    def __init__(self, config: SiglipVisualizationConfig):
+        super().__init__()
+        self.config = config
+        self.self_attn = SiglipAttention(config)  # self attention layer
+        self.layer_norm1 = nn.LayerNorm(config.embed_dim, eps=config.layer_norm_eps)  # layer normalization
+        self.mlp = SiglipMLP(config)  # feedforward network
+        self.layer_norm2 = nn.LayerNorm(config.embed_dim, eps=config.layer_norm_eps)  # layer normalization
+
+    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
+        # residual: [batch_size, num_patches, embed_dim]
+        residual = hidden_states
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, embed_dim]
+        hidden_states = self.layer_norm1(hidden_states)
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, embed_dim]
+        hidden_states, _ = self.self_attn(hidden_states=hidden_states)
+        # [batch_size, num_patches, embed_dim] 
+        hidden_states = hidden_states + residual # adding the split attention to the residual
+        # residual: [batch_size, num_patches, embed_dim]
+        residual = hidden_states
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, embed_dim]
+        hidden_states = self.layer_norm2(hidden_states)
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, embed_dim]
+        # MLP is a feedforward network with one hidden layer
+        # adds the nonlienarity to the model
+        hidden_states = self.mlp(hidden_states)
+        # [batch_size, num_patches, embed_dim] 
+        hidden_states = hidden_states + residual # adding the split attention to the residual
+
+        return hidden_states
 class SiglipVisualEmbeddings(nn.Module):
     
     def __init__(self, config: SiglipVisualizationConfig):
@@ -68,10 +119,10 @@ class SiglipVisualEmbeddings(nn.Module):
         # Convolve the `patch_size` kernel over the image, with no overlapping patches since the stride is equal to the kernel size
         # The output of the convolution will have shape [Batch_Size, Embed_Dim, Num_Patches_H, Num_Patches_W]
         # where Num_Patches_H = height // patch_size and Num_Patches_W = width // patch_size
-        x = self.patch_embeddings(pixel_values)  # [batch_size, hidden_size, num_patches]
+        patch_embeds = self.patch_embeddings(pixel_values)  # [batch_size, hidden_size, num_patches]
         # [batch_size, hidden_size, num_patches] -> [batch_size, num_patches, Num_Patches] 
         # where Num_Patches = Num_Patches_H * Num_Patches_W
-        x = x.flatten(2).transpose(1, 2)  # [batch_size, num_patches, hidden_size]
+        embeddings = patch_embeds.flatten(2).transpose(1, 2)  # [batch_size, num_patches, hidden_size]
         # Add postion embeddings to each patch. Each positional encoding is a vector of size `embed_dim`
         embeddings = embeddings + self.position_embeddings(self.position_ids)  
         # [batch_size, num_patches, embed_dim]
@@ -98,6 +149,9 @@ class SiglipVisualTransformer(nn.Module):
         last_hidden_state = self.encoder(hidden_states)  # Encoding the patches through the transformer layers
 
         last_hidden_state = self.post_layer_norm(last_hidden_state)  # Layer normalization
+        # To get good results with batch normalization, the batch size should be large enough, ( > 32)
+        # This is my layer normalization is used, since it is more robust to small batch sizes -> calcualtes the norm along the feature dimension
+        # it reduces the magnitude of the gradients between different batches/images -> calculates the norm along the item dimension
 
         return last_hidden_state
 
@@ -111,8 +165,6 @@ class SiglipVisualModel(nn.Module): # nn.Module is the base class for all neural
         self.vision_model = SiglipVisualTransformer(config) # initialize the vision model with the config
 
     def forward(self, pixel_values: torch.Tensor) -> Tuple: # forward pass of the model, for inference and forward pass 
-        # [batch_size, num_channels, image_size, image_size] -> [batch_size, num_patches, Embedding_size]
-        # So each image is divided into a nmber of patches, which will be an of embeddings vector of size Embedding_size
-        # Output: List of Embeddings for each image. 
-        # OBS: using list instead of arras, since image can have different sizes
-        return self.vision_model(pixel_values=pixel_values)
+        # [batch_size, num_channels, height, width] -> [batch_size, num_patches, hidden_size]
+        hidden_states = self.vision_model(pixel_values)
+        
