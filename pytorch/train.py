@@ -96,6 +96,7 @@ def test(model, test_loader):
 
         test_acc = correct / total
         print(f'Test Accuracy: {test_acc:.4f}')
+        return test_acc
 
 # Run training, validation after each epoch, and testing after all epochs
 if __name__ == '__main__':
