@@ -2,6 +2,8 @@ from typing import Optional, Tuple
 import torch
 import torch.nn as nn
 
+# SIGLIP: INput: Image, Output: Embeddings
+
 class SiglipVisualizationConfig:
 
     def __init__(self,
@@ -219,6 +221,36 @@ class SiglipVisualTransformer(nn.Module):
 
         return last_hidden_state
 
+
+class SiglipEncoderLayer(nn.Module):
+
+    def __init__(self, config: SiglipVisualizationConfig):
+        super().__init__()
+        self.config = config
+        self.attention = SiglipAttention(config)
+        self.intermediate = SiglipMLP(config)
+        self.layer_norm1 = nn.LayerNorm(config.embed_dim, eps=config.layer_norm_eps)
+        self.mlp = SiglipMLP(config)
+        self.layer_norm2 = nn.LayerNorm(config.embed_dim, eps=config.layer_norm_eps)
+
+    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
+        # hidden_states: [batch_size, num_patches, embed_dim]
+        residual = hidden_states
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, embed_dim]
+        hidden_states = self.layer_norm1(hidden_states)
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, embed_dim]
+        hidden_states = self.attention(hidden_states=hidden_states)
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, embed_dim]
+        hidden_states = hidden_states + residual
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, embed_dim]
+        residual = hidden_states
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, embed_dim]
+        residual = self.layer_norm2(residual)
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, embed_dim]
+        hidden_states = self.mlp(hidden_states=hidden_states)
+        # [batch_size, num_patches, embed_dim] -> [batch_size, num_patches, embed_dim]
+        hidden_states = hidden_states + residual
+        return hidden_states
 
 
 class SiglipVisualModel(nn.Module): # nn.Module is the base class for all neural network modules in PyTorch
