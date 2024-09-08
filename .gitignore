@@ -28,3 +28,6 @@ Umar/Transformers/tokenizer_en.json
 pytorch/data
 pytorch/mlruns
 pytorch/__pycache__
+Umar/Transformers/runs
+*.env
+gemini/*.txt
