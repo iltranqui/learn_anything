@@ -2,8 +2,6 @@ import random
 import time
 import numpy as np  # Import numpy for array handling
 
-
-
 # Step 1: Load random_names.txt file
 def load_names(file_path):
     with open(file_path, "r") as file:
@@ -11,6 +9,7 @@ def load_names(file_path):
     return np.array(names)  # Convert the list to a numpy array
 
 def array_access(names, index):
+    assert isinstance(names, np.ndarray), "names should be a numpy array"
     total_time = 0
     best_time = float('inf')
     worst_time = float('-inf')
@@ -29,6 +28,7 @@ def array_access(names, index):
     return result
 
 def array_search(names, name):
+    assert isinstance(names, np.ndarray), "names should be a numpy array"
     total_time = 0
     best_time = float('inf')
     worst_time = float('-inf')
@@ -44,9 +44,10 @@ def array_search(names, name):
             worst_time = elapsed_time
     average_time = total_time / 100
     print(f"Average time taken to SEARCH a name: {average_time:.5f} ms | Best time: {best_time:.5f} ms | Worst time: {worst_time:.5f} ms | Length: {len(names)}")
-    return result
+    return result, average_time
 
 def array_insert(names, name):
+    assert isinstance(names, np.ndarray), "names should be a numpy array"
     total_time = 0
     best_time = float('inf')
     worst_time = float('-inf')
@@ -62,9 +63,10 @@ def array_insert(names, name):
             worst_time = elapsed_time
     average_time = total_time / 100
     print(f"Average time taken to INSERT a name: {average_time:.5f} ms | Best time: {best_time:.5f} ms | Worst time: {worst_time:.5f} ms | Length: {len(names)}")
-    return names
+    return names, average_time
 
 def array_delete(names, name):
+    assert isinstance(names, np.ndarray), "names should be a numpy array"
     total_time = 0
     best_time = float('inf')
     worst_time = float('-inf')
@@ -80,7 +82,7 @@ def array_delete(names, name):
             worst_time = elapsed_time
     average_time = total_time / 100
     print(f"Average time taken to DELETE a name: {average_time:.5f} ms | Best time: {best_time:.5f} ms | Worst time: {worst_time:.5f} ms | Length: {len(names)}")
-    return names
+    return names, average_time
 
 if __name__ == "__main__":
     # Load names in a numpy array data structure
@@ -99,8 +101,8 @@ if __name__ == "__main__":
 
     # Insert Test
     name = "John Doe"
-    names = array_insert(names, name)
+    names, _ = array_insert(names, name)
 
     # Delete Test
     name = "John Doe"
-    names = array_delete(names, name)
+    names, _ = array_delete(names, name)

@@ -8,6 +8,7 @@ def load_names(file_path):
     return names
 
 def list_access(names, index):
+    assert isinstance(names, list), "names should be a list"
     total_time = 0
     best_time = float('inf')
     worst_time = float('-inf')
@@ -23,9 +24,10 @@ def list_access(names, index):
             worst_time = elapsed_time
     average_time = total_time / 100
     print(f"Average time taken to ACCESS a name: {average_time:.5f} ms | Best time: {best_time:.5f} ms | Worst time: {worst_time:.5f} ms| Length: {len(names)}")
-    return result
+    return names, average_time
 
 def list_search(names, name):
+    assert isinstance(names, list), "names should be a list"
     total_time = 0
     best_time = float('inf')
     worst_time = float('-inf')
@@ -41,9 +43,10 @@ def list_search(names, name):
             worst_time = elapsed_time
     average_time = total_time / 100
     print(f"Average time taken to SEARCH a name: {average_time:.5f} ms | Best time: {best_time:.5f} ms | Worst time: {worst_time:.5f} ms | Length: {len(names)}")
-    return result
+    return names, average_time
 
 def list_insert(names, name):
+    assert isinstance(names, list), "names should be a list"
     total_time = 0
     best_time = float('inf')
     worst_time = float('-inf')
@@ -59,9 +62,10 @@ def list_insert(names, name):
             worst_time = elapsed_time
     average_time = total_time / 100
     print(f"Average time taken to INSERT a name: {average_time:.5f} ms | Best time: {best_time:.5f} ms | Worst time: {worst_time:.5f} ms | Length: {len(names)}")
-    return names
+    return names, average_time
 
 def list_delete(names, name):
+    assert isinstance(names, list), "names should be a list"
     total_time = 0
     best_time = float('inf')
     worst_time = float('-inf')
@@ -77,7 +81,7 @@ def list_delete(names, name):
             worst_time = elapsed_time
     average_time = total_time / 100
     print(f"Average time taken to DELETE a name: {average_time:.5f} ms | Best time: {best_time:.5f} ms | Worst time: {worst_time:.5f} ms | Length: {len(names)}")
-    return names
+    return names, average_time
 
 if __name__ == "__main__":
     # load names in a list data structure
@@ -87,20 +91,24 @@ if __name__ == "__main__":
     print(len(names))
 
     # Access Test
-    int = random.randint(0, len(names))
-    list_access(names, int)
+    index = random.randint(0, len(names) - 1)
+    names, avg_access_time = list_access(names, index)
+    print(f"Average access time: {avg_access_time:.5f} ms")
 
     # Search Test
-    name = names[random.randint(0, len(names))]
-    list_search(names, name)
+    name = names[random.randint(0, len(names) - 1)]
+    names, avg_search_time = list_search(names, name)
+    print(f"Average search time: {avg_search_time:.5f} ms")
 
     # Insert Test
     name = "John Doe"
-    names = list_insert(names, name)
+    names, avg_insert_time = list_insert(names, name)
+    print(f"Average insert time: {avg_insert_time:.5f} ms")
 
     # Delete Test
     name = "John Doe"
-    names = list_delete(names, name)
+    names, avg_delete_time = list_delete(names, name)
+    print(f"Average delete time: {avg_delete_time:.5f} ms")
 
     
 

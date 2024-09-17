@@ -4,7 +4,7 @@ from faker import Faker
 fake = Faker()
 
 # Generate a list of 1000 random names
-random_names = [fake.name() for _ in range(1000*1000)]
+random_names = [fake.name() for _ in range(1000)]
 
 # Print the names (optional)
 #for name in random_names:
