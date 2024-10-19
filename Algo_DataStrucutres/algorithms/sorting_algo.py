@@ -1,18 +1,12 @@
-def bubble_sort(arr):
-    n = len(arr)
-    for i in range(n):
-        # Track if any swap happens
-        swapped = False
-        for j in range(0, n-i-1):
-            if arr[j] > arr[j+1]:
-                # Swap the elements
-                arr[j], arr[j+1] = arr[j+1], arr[j]
-                swapped = True
-        # If no swap happened, the array is already sorted
-        if not swapped:
-            break
-    return arr
-
+def quick_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    else:
+        pivot = arr[0]
+        less = [x for x in arr[1:] if x <= pivot]
+        greater = [x for x in arr[1:] if x > pivot]
+        return quick_sort(less) + [pivot] + quick_sort(greater)
+    
 def merge_sort(arr):
     if len(arr) > 1:
         mid = len(arr) // 2
@@ -47,15 +41,57 @@ def merge_sort(arr):
             k += 1
     return arr
 
-def quick_sort(arr):
-    if len(arr) <= 1:
-        return arr
-    else:
-        pivot = arr[0]
-        less = [x for x in arr[1:] if x <= pivot]
-        greater = [x for x in arr[1:] if x > pivot]
-        return quick_sort(less) + [pivot] + quick_sort(greater)
+# TODO: Implement Tim Sort 
+def tim_sort(arr):
+    arr.sort()
+    return arr
+
+def heap_sort(arr):
+    def heapify(arr, n, i):
+        largest = i
+        left = 2 * i + 1
+        right = 2 * i + 2
+
+        # Check if left child exists and is greater than the root
+        if left < n and arr[i] < arr[left]:
+            largest = left
+
+        # Check if right child exists and is greater than the root
+        if right < n and arr[largest] < arr[right]:
+            largest = right
+
+        # Change root if needed
+        if largest != i:
+            arr[i], arr[largest] = arr[largest], arr[i]
+            heapify(arr, n, largest)
+
+    n = len(arr)
+
+    # Build a maxheap
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(arr, n, i)
+
+    # Extract elements one by one
+    for i in range(n - 1, 0, -1):
+        arr[i], arr[0] = arr[0], arr[i]
+        heapify(arr, i, 0)
+    return arr
     
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        # Track if any swap happens
+        swapped = False
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                # Swap the elements
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+                swapped = True
+        # If no swap happened, the array is already sorted
+        if not swapped:
+            break
+    return arr
+
 def insertion_sort(arr):
     for i in range(1, len(arr)):
         key = arr[i]
@@ -73,6 +109,50 @@ def selection_sort(arr):
             if arr[j] < arr[min_index]:
                 min_index = j
         arr[i], arr[min_index] = arr[min_index], arr[i]
+    return arr
+
+def tree_sort(arr):
+    class Node:
+        def __init__(self, key):
+            self.key = key
+            self.left = None
+            self.right = None
+
+    def insert(node, key):
+        if node is None:
+            return Node(key)
+        if key < node.key:
+            node.left = insert(node.left, key)
+        else:
+            node.right = insert(node.right, key)
+        return node
+
+    def in_order_traversal(node):
+        if node is not None:
+            in_order_traversal(node.left)
+            sorted_arr.append(node.key)
+            in_order_traversal(node.right)
+
+    root = None
+    for key in arr:
+        root = insert(root, key)
+
+    sorted_arr = []
+    in_order_traversal(root)
+    return sorted_arr
+
+def shell_sort(arr):
+    n = len(arr)
+    gap = n // 2
+    while gap > 0:
+        for i in range(gap, n):
+            temp = arr[i]
+            j = i
+            while j >= gap and arr[j - gap] > temp:
+                arr[j] = arr[j - gap]
+                j -= gap
+            arr[j] = temp
+        gap //= 2
     return arr
 
 def bucket_sort(arr):
@@ -95,6 +175,40 @@ def bucket_sort(arr):
         for j in range(len(buckets[i])):
             arr[k] = buckets[i][j]
             k += 1
+    return arr
+
+def radix_sort(arr):
+    def counting_sort(arr, exp):
+        n = len(arr)
+        output = [0] * n
+        count = [0] * 10
+
+        # Store the count of each element
+        for i in range(n):
+            index = arr[i] // exp
+            count[index % 10] += 1
+
+        # Store the cumulative count of each element
+        for i in range(1, 10):
+            count[i] += count[i - 1]
+
+        # Build the output array
+        i = n - 1
+        while i >= 0:
+            index = arr[i] // exp
+            output[count[index % 10] - 1] = arr[i]
+            count[index % 10] -= 1
+            i -= 1
+
+        # Copy the output array to the original array
+        for i in range(n):
+            arr[i] = output[i]
+
+    max_element = max(arr)
+    exp = 1
+    while max_element // exp > 0:
+        counting_sort(arr, exp)
+        exp *= 10
     return arr
 
 def counting_sort(arr):
@@ -126,4 +240,19 @@ def counting_sort(arr):
     # Copy the sorted elements into original array
     for i in range(n):
         arr[i] = output[i]
+    return arr
+
+# TODO: Implement Cube Sort
+def cube_sort(arr):
+    n = len(arr)
+    gap = n // 2
+    while gap > 0:
+        for i in range(gap, n):
+            temp = arr[i]
+            j = i
+            while j >= gap and arr[j - gap] > temp:
+                arr[j] = arr[j - gap]
+                j -= gap
+            arr[j] = temp
+        gap //= 2
     return arr

@@ -50,8 +50,9 @@ import matplotlib.pyplot as plt
 def time_operation_at_scale(n_values, lower_bound=1, upper_bound=5000):
     results = {}
     with Progress() as progress:
-        task = progress.add_task("[green]Processing...", total=len(range(10, 10001, 100)))
-        for n in range(10, 10001, 100):
+        task = progress.add_task("[green]Processing...", total=len(range(1000, 10001, 1000)))
+        for n in range(1000, 10001, 1000):
+            progress.update(task, description=f"[green]Processing array of {n} elements...")
             random_array = generate_random_array(n, lower_bound, upper_bound)
             _, bubble_sort_time = time_operation(bubble_sort, random_array.copy())
             _, merge_sort_time = time_operation(merge_sort, random_array.copy())
@@ -82,6 +83,24 @@ def time_operation_at_scale(n_values, lower_bound=1, upper_bound=5000):
     counting_sort_times = [results[n]["counting_sort"] for n in n_values]
 
     plt.figure(figsize=(10, 6))
+
+    # Define time complexity functions for illustration purposes
+    O_1 = np.ones_like(n_values)                  # O(1)
+    O_log_n = np.log(n_values)                    # O(log n)
+    O_n = np.asarray(n_values)                                # O(n)
+    O_n_log_n = np.asarray(n_values) * np.log(n_values)       # O(n log n)
+    O_n2 = np.asarray(n_values) ** 2                          # O(n^2)
+    O_2n = 2 ** np.asarray(n_values)                          # O(2^n)
+    # Limit factorial computation to avoid overflow (use n_values[:10] for smaller values)
+    O_log_factorial = [n * np.log(n) - n if n > 0 else 0 for n in n_values[:20]]  # For first 20 elements only
+
+    # Fill regions with colors corresponding to different complexities
+    plt.fill_between(n_values, O_1, O_n_log_n, color='green', alpha=0.3, label='O(1), O(log n)')
+    plt.fill_between(n_values, O_n_log_n, O_n, color='yellow', alpha=0.3, label='O(n log n)')
+    plt.fill_between(n_values, O_n, O_n2, color='orange', alpha=0.3, label='O(n)')
+    plt.fill_between(n_values, O_n2, O_2n, color='red', alpha=0.3, label='O(n^2)')
+    plt.fill_between(n_values, O_2n, O_log_factorial, color='darkred', alpha=0.3, label='O(2^n), O(n!)')
+
     plt.plot(n_values, bubble_sort_times, label='Bubble Sort', marker='o')
     plt.plot(n_values, merge_sort_times, label='Merge Sort', marker='o')
     plt.plot(n_values, quick_sort_times, label='Quick Sort', marker='o')
@@ -92,6 +111,8 @@ def time_operation_at_scale(n_values, lower_bound=1, upper_bound=5000):
 
     plt.xlabel('Number of Elements (n)')
     plt.ylabel('Sorting Time (ms)')
+    plt.ylim(0, 600)  # Set y-axis limit to 2000 ms
+    # plt.yscale('log')  # Set y-axis to log scale -> for log scale, simply uncomment this line
     plt.title('Sorting Algorithm Performance')
     plt.legend()
     plt.grid(True)
@@ -121,7 +142,7 @@ def main():
     console.print(f"Insertion Sort: {insertion_sort_time} ms", style="bold yellow")
 
     # Time the sorting algorithms at scale
-    n_values = range(10, 20001, 1000)
+    n_values = range(1000, 10001, 1000)
     results = time_operation_at_scale(n_values)
 
 if __name__ == "__main__":
