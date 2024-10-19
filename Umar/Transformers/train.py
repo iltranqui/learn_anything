@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, random_split
-from torch.utils.tensorboard import SummaryWriter   # what the hell is this ? 
+from torch.utils.tensorboard import SummaryWriter   
+from rich.console import Console
 
 from dataset import BilingualDataset, casual_mask
 from model import build_transform
@@ -16,8 +17,11 @@ from tokenizers.trainers import WordLevelTrainer
 from tokenizers.pre_tokenizers import Whitespace
 
 from pathlib import Path
+import pytest
 
+import pretty_errors
 import warnings # to avoid reading all the warnings
+console = Console()
 
 """
     What does an encoding do ? -> it divides the text into tokens which can be handled
@@ -169,7 +173,7 @@ def train_model(config):
             encoder_mask = batch['encoder_mask'].to(device) #   ( B , 1, 1, Seq_len )
             decoder_mask = batch['decoder_mask'].to(device) # ( b, 1, Seq_len, seq_len)
 
-            # Run the tensor through he transformer 
+            # Run the tensor through he transformer
             encoder_output = model.encode(encoder_input, encoder_mask)   # ( B, Seq_LEn, d_model)
             decoder_output = model.decode(encoder_output, encoder_mask, decoder_input, decoder_mask)  # (B, Seq_Len, d_model)
 
@@ -207,5 +211,6 @@ def train_model(config):
 if __name__ == '__main__':
     warnings.filterwarnings('ignore')
     config = get_config()
+    pytest.main(['-v', 'test_transformer.py'])  # Run the tests
     train_model(config)
 
