@@ -1,19 +1,21 @@
 def quick_sort(arr):
-    if len(arr) <= 1:
-        return arr
+    if len(arr) <= 1:  # if the array has only one element or no element
+        return arr  # simply return the array
     else:
-        pivot = arr[0]
-        less = [x for x in arr[1:] if x <= pivot]
-        greater = [x for x in arr[1:] if x > pivot]
-        return quick_sort(less) + [pivot] + quick_sort(greater)
+        pivot = arr[0]  # select the first element as pivot
+        less = [x for x in arr[1:] if x <= pivot]  # create a list of all the elements less than the pivot
+        greater = [x for x in arr[1:] if x > pivot]  # create a 2nd list of all the elements greater than the pivot
+        return quick_sort(less) + [pivot] + quick_sort(greater) # recursively call the quick_sort function on the less and greater list and concatenate the sorted lists
+        # it returns the sorted list on both left and right side of the pivot
     
 def merge_sort(arr):
-    if len(arr) > 1:
-        mid = len(arr) // 2
+    if len(arr) > 1:     # if the array has more than one element, simèly return the array
+        mid = len(arr) // 2   # find the middle of the array
         left_half = arr[:mid]
         right_half = arr[mid:]
 
         # Recursive call on each half
+        # UNtil both halves are only length 1 on 1st passthorugh
         merge_sort(left_half)
         merge_sort(right_half)
 
@@ -22,10 +24,10 @@ def merge_sort(arr):
         # Copy data to temp arrays left_half[] and right_half[]
         while i < len(left_half) and j < len(right_half):
             if left_half[i] < right_half[j]:
-                arr[k] = left_half[i]
+                arr[k] = left_half[i]  # if the element in the left half is less than the element in the right half, copy the element to the original array
                 i += 1
             else:
-                arr[k] = right_half[j]
+                arr[k] = right_half[j]  # else the opposite
                 j += 1
             k += 1
 
