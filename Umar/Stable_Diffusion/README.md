@@ -2,6 +2,12 @@
 
 https://huggingface.co/runwayml/stable-diffusion-v1-5/blob/main/v1-5-pruned-emaonly.ckpt
 
+## Get Started
+in local terminal execute the following 
+```python
+python main.py
+```
+
 # Generative Model 
 
 A Generative model learns a probability distribution of the data set so that we can sample from the distribution to create new instances of data. Ex: if we have images of cats, we train a generative model on the images so that we can generate new images of cats.
@@ -27,7 +33,10 @@ A variational autoencoder is a generative model which generates a new image by a
 
 a vector of betas $\beta$ is sampled from a normal distribution. Each $\beta$ represents the mean and the variance of the noise added at each step. The Forward Process will try to predict the mean and variance of the noise added to the image, in a reverse process. 
 
+## Folder Strucutre
 
+> [!NOTE]
+> TO DO
 
 ## The Training Process
 
