@@ -22,6 +22,17 @@ This last step is considered discrete, but there is a new method called **Flow M
 The Entirety of all the pictures within an image is a huge collection of joint probability distributions. Each single pixel is a joint probability distribution of the pixel and all the other pixels in the image.
 If you remember from proability theoery, if you have 2 distruvtion x and y $P(x,y)$ is the joint probability distribution of x and y. If you have a joint probability distribution of x and y, you can get the marginal probability distribution of x by summing over all the values of y. $P(x) = \sum_y P(x,y)$
 
+## Structure of the Diffusion Model
+
+3 main components:
+
+> [!WARNING]
+> Wrong, correct it
+
+1. VAE (Variational Autoencoder) for encoding and decoding the images
+2. CLIP (Congrt) for incorporating the prompt into the images 
+3. Diffusion Model for generating the images 
+
 ## Variational Autoencoder
 
 A variational autoencoder is a generative model which generates a new image by adding noise and then trying to rebuild the original image by removing the noise, tryin to get close to the original image. There are 2 processes: ù
