@@ -8,20 +8,18 @@ def create_anki_deck(csv_file, deck_name="My Language Deck"):
         reader = csv.reader(csvfile, delimiter=';')
         data = list(reader)
     
-    # Define the model (field layout)
-    model = genanki.Model(
-        1607392319,
+    model_english = genanki.Model(
+        1607392320,
         'Language Model',
         fields=[
-            {'name': 'English'},
             {'name': 'Italian'},
-            {'name': 'Spanish'},
+            {'name': 'English'},
         ],
         templates=[
             {
                 'name': 'Card 1',
-                'qfmt': 'English: {{English}}<br>Italian: {{Italian}}',
-                'afmt': '{{FrontSide}}<hr id="answer">Spanish: {{Spanish}}',
+                'qfmt': 'Italiano: {{Italian}}',  # Display Italian on the front
+                'afmt': '{{FrontSide}}<hr id="answer">English: {{English}}',  # Display English on the back
             },
         ])
 
@@ -32,13 +30,12 @@ def create_anki_deck(csv_file, deck_name="My Language Deck"):
 
     # Add cards to the deck
     for row in data:
-        if len(row) >= 3:  # Ensure there are three columns (English, Italian, Spanish)
-            english = row[0]  # "Hello"
-            italian = row[1]  # "Ciao"
-            spanish = row[2]  # "Hola"
+        if len(row) >= 2:  # Ensure there are three columns (English, Italian, Spanish)
+            italian = row[0]  # "Ciao"
+            english = row[1]  # "Hello"
             note = genanki.Note(
-                model=model,
-                fields=[english, italian, spanish])
+                model=model_english, # or model_spanish
+                fields=[italian, english]) # or [english, italian, spanish]
             deck.add_note(note)
 
     # Save the deck to a .apkg file
@@ -46,4 +43,4 @@ def create_anki_deck(csv_file, deck_name="My Language Deck"):
     print(f"Anki deck '{deck_name}.apkg' created successfully!")
 
 # Example of usage
-create_anki_deck('Spanish_words.csv', 'Spanish_Enrico')
+create_anki_deck('english_words.csv', 'Inglese_Semplice') # or Spanish_words.csv
