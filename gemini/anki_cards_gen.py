@@ -10,7 +10,24 @@ def create_anki_deck_from_csv(csv_file, deck_name, output_file):
     )
 
     # Define a simple model (question-answer template)
-    my_model = genanki.Model(
+    my_model_spanish = genanki.Model(
+        1091735104,  # Model ID, must be unique
+        'Simple Model',
+        fields=[
+            {'name': 'Question'},
+            {'name': 'Answer'},
+        ],
+        templates=[
+            {
+                'name': 'Card 1',
+                'qfmt': '{{Question}}',
+                'afmt': '{{FrontSide}}<hr id="answer">{{Answer}}',
+            },
+        ]
+    )
+
+    # Define a simple model (question-answer template)
+    my_model_english = genanki.Model(
         1091735104,  # Model ID, must be unique
         'Simple Model',
         fields=[
