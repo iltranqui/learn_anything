@@ -22,6 +22,20 @@ This last step is considered discrete, but there is a new method called **Flow M
 The Entirety of all the pictures within an image is a huge collection of joint probability distributions. Each single pixel is a joint probability distribution of the pixel and all the other pixels in the image.
 If you remember from proability theoery, if you have 2 distruvtion x and y $P(x,y)$ is the joint probability distribution of x and y. If you have a joint probability distribution of x and y, you can get the marginal probability distribution of x by summing over all the values of y. $P(x) = \sum_y P(x,y)$
 
+## Structure of the Diffusion Model
+
+3 main components:
+
+> [!WARNING]
+> Wrong, correct it
+
+1. VAE (Variational Autoencoder) for encoding the image into a latent space
+    - Encoder: for encoding the image into a latent space
+    - Decoder: for decoding the image from the latent space
+2. CLIP (Congrt) for incorporating the prompt into the images , via an encoder and adding it into the latent space
+3. Diffusion Model for generating the images 
+    - Unet: for predicting the noise added to the image
+
 ## Variational Autoencoder
 
 A variational autoencoder is a generative model which generates a new image by adding noise and then trying to rebuild the original image by removing the noise, tryin to get close to the original image. There are 2 processes: ù
@@ -50,3 +64,16 @@ The Unet is trained to predict what kind of noise has been added to the image. T
 Let's say we start from a image with $t=1000$ noise. **Step 1** We train the Unet with the image and the prompt. Then we repear the same process with $t=1000$ but **without** the prompt. we can unite the 2 models into one model that can work with or without the prompt by using the **classifier-free guidance**, like an $\alpha$ from 0 to 1 which decides how much to use one model or the other.  The lower the value, the less the prompt will be used. 
 
 THE MODEL understand the meaning of the prompt via the **CLIP (Constrastive Language-Image Pre Training)** method
+
+## CLIP 
+
+Clip embeds the image and the prompt into a latent space. The image is encoded into a latent space and the prompt is also encoded into a latent space. The 2 latent spaces are then combined and the model is trained to predict the image from the combined latent space.
+1. The [entire vocabulary](vocabulary.json) of length 49408 is encoded with embeddings using torch embeddings
+2. The embeddings are then trained to predict the image from the prompt
+ using a ClLIP PLayer, which is a series of transformer layers
+3. Final layers normalizations are added to the embeddings to make the model more robust
+    But the model still follows the architecture of the transformer modelS
+
+## Diffusion Model
+
+The diffusion model is trained to predict the noise added to the image, but also in the input it will unit the clip emeddings and the VAE encoder embeddings

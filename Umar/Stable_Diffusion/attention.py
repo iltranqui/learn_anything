@@ -10,12 +10,15 @@ class SelfAttention(nn.Module):
         assert d_embed % n_heads == 0, "d_embed must be divisible by n_heads"
         # This combines the Wq, Wk and Wv matrices into one matrix
         self.in_proj = nn.Linear(d_embed, 3 * d_embed, bias=in_proj_bias)
-        # This one represents the Wo matrix
+        # This one represents the Wo matrix -> after the combination of the Wq, Wk and Wv matrices
         self.out_proj = nn.Linear(d_embed, d_embed, bias=out_proj_bias)
         self.n_heads = n_heads
         self.d_head = d_embed // n_heads
 
-    def forward(self, x, causal_mask=False):
+    def forward(self, x: torch.Tensor, causal_mask=False):
+        """
+        Mask: to avoid to relate tokens in the future to tokens in the past
+        """
         # x: # (Batch_Size, Seq_Len, Dim)
 
         # (Batch_Size, Seq_Len, Dim)
@@ -24,7 +27,7 @@ class SelfAttention(nn.Module):
         # (Batch_Size, Seq_Len, Dim)
         batch_size, sequence_length, d_embed = input_shape 
 
-        # (Batch_Size, Seq_Len, H, Dim / H)
+        # (Batch_Size, Seq_Len, H, Dim / Num_Heads)
         interim_shape = (batch_size, sequence_length, self.n_heads, self.d_head) 
 
         # (Batch_Size, Seq_Len, Dim) -> (Batch_Size, Seq_Len, Dim * 3) -> 3 tensor of shape (Batch_Size, Seq_Len, Dim)
@@ -39,7 +42,7 @@ class SelfAttention(nn.Module):
         weight = q @ k.transpose(-1, -2)
         
         if causal_mask:
-            # Mask where the upper triangle (above the principal diagonal) is 1
+            # Mask where the upper triangle (above the principal diagonal) is 1,  [0 triu considers the main diagonal]
             mask = torch.ones_like(weight, dtype=torch.bool).triu(1) 
             # Fill the upper triangle with -inf
             weight.masked_fill_(mask, -torch.inf) 
