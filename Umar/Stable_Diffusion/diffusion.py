@@ -76,6 +76,43 @@ class UNET(nn.Module):
 
             SwitchSequential(UNET_ResidualBlock(1280, 1280), UNET_AttentionBlock(8, 160)),
         ])
+
+        self.bottleneck = SwitchSequential(
+            UNET_ResidualBlock(1280, 1280),
+            UNET_AttentionBlock(8, 160),
+            UNET_ResidualBlock(1280, 1280),
+        ) 
+
+        self.decoders = nn.ModuleList([
+            SwitchSequential(
+                """
+                Expect double the size, since we are considering the skip connections. 
+                """
+                UNET_ResidualBlock(2560, 1280), 
+            )
+
+            SwitchSequential(UNET_ResidualBlock(2560, 1280)),
+
+            SwitchSequential(UNET_ResidualBlock(2560, 1280), UpSample(1280)),
+
+            SwitchSequential(UNET_ResidualBlock(2560, 1280), UNET_AttentionBlock(8, 160)),
+
+            SwitchSequential(UNET_ResidualBlock(2560, 1280), UNET_AttentionBlock(8, 160)),
+
+            SwitchSequential(UNET_ResidualBlock(1920, 640), UNET_AttentionBlock(8, 160), UpSample(1280)),
+
+            SwitchSequential(UNET_ResidualBlock(1920, 640), UNET_AttentionBlock(8, 80)),
+
+            SwitchSequential(UNET_ResidualBlock(1920, 640), UNET_AttentionBlock(8, 80)),
+
+            SwitchSequential(UNET_ResidualBlock(960, 320), UNET_AttentionBlock(8, 80), UpSample(640)),
+
+            SwitchSequential(UNET_ResidualBlock(960, 320), UNET_AttentionBlock(8, 40)),
+
+            SwitchSequential(UNET_ResidualBlock(640, 320), UNET_AttentionBlock(8, 40)),
+
+            SwitchSequential(UNET_ResidualBlock(320, 320), UNET_AttentionBlock(8, 40)),
+
         
 
 
