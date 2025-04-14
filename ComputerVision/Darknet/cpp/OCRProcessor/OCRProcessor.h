@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <opencv2/opencv.hpp>
+// Include DarkHelp which already includes OpenCV
 #include <DarkHelp.hpp>
 #include <yolo_v2_class.hpp>
 

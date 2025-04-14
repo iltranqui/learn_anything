@@ -1,0 +1,20 @@
+{
+  "test_cases": [
+    {
+      "image_path": "test_image1.jpg",
+      "expected_lines": [
+        "123456",
+        "hellothere",
+        "eonegi"
+      ]
+    },
+    {
+      "image_path": "test_image2.jpg",
+      "expected_lines": [
+        "ABCDEF",
+        "test123",
+        "sample"
+      ]
+    }
+  ]
+}
